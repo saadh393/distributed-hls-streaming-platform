@@ -29,6 +29,10 @@ services:
     build: ./storage-service
     env_file:
       - .env
+    volumes:
+      - ./media/uploads:/app/uploads
+    ports:
+      - "4002:4002"
 
   transcoder-service:
     build: ./transcoder-service
