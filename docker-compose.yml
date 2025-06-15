@@ -1,63 +1,12 @@
 services:
   api-gateway:
-    build: ./api-gateway
+    build: ./api-gateway/
+    container_name: api-gateway
     ports:
-      - "8080:8080"
-    env_file:
-      - .env
-    depends_on:
-      - auth-service
-      - upload-service
-
-  auth-service:
-    build: ./auth-service
-    env_file:
-      - .env
-
-  upload-service:
-    build: ./upload-service
-    env_file:
-      - .env
+      - "3000:3000"
     volumes:
-      - ./media/uploads:/app/uploads
-    ports:
-      - "4001:4001"
-    depends_on:
-      - jobs-queue
-
-  storage-service:
-    build: ./storage-service
-    env_file:
-      - .env
-    volumes:
-      - ./media/uploads:/app/uploads
-    ports:
-      - "4002:4002"
-
-  transcoder-service:
-    build: ./transcoder-service
-    env_file:
-      - .env
-    volumes:
-      - ./media/uploads:/app/uploads
-      - ./media/transcoded:/app/transcoded
-    depends_on:
-      - jobs-queue
-
-  hls-packager:
-    build: ./hls-packager
-    env_file:
-      - .env
-    volumes:
-      - ./media/transcoded:/app/transcoded
-      - ./media/hls:/app/hls
-
-  jobs-queue:
-    image: redis:7
-    ports:
-      - "6379:6379"
-
-  nginx:
-    build: ./docker/nginx
-    ports:
-      - "80:80"
+      - ./api-gateway/:/app
+      - /app/node_modules
+    command: npm run dev
+    environment:
+      - CHOKIDAR_USEPOLLING=true
