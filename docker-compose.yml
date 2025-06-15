@@ -10,3 +10,15 @@ services:
     command: npm run dev
     environment:
       - CHOKIDAR_USEPOLLING=true
+
+  storage-service:
+    build: ./storage-service
+    container_name: storage-service
+    port:
+      - "3001:3001"
+    volumes:
+      - ./storage-service/:/app
+      - /app/node_modules
+    command: npm run dev
+    environment:
+      - CHOKIDAR_USEPOLLING=true
