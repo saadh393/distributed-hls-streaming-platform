@@ -11,13 +11,13 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
 
-  storage-service:
-    build: ./storage-service
-    container_name: storage-service
-    port:
+  upload-service:
+    build: ./upload-service
+    container_name: upload-service
+    ports:
       - "3001:3001"
     volumes:
-      - ./storage-service/:/app
+      - ./upload-service/:/app
       - /app/node_modules
     command: npm run dev
     environment:
