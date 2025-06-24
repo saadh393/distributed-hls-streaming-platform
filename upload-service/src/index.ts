@@ -7,5 +7,5 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, async () => {
   await validateDir(tmpdir);
 
-  console.log(`Upload Server is listening at http://localhost:${PORT}`);
+  console.log(`🚀 Upload Server is listening at http://localhost:${PORT}`);
 });

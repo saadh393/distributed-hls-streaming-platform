@@ -1,20 +1,24 @@
 import multer from "multer";
-import { tmpdir } from "../../config/config";
+import path from "path";
 import generateId from "../../utils/generate-id";
+import { tmpdir } from "./../../config/config";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, tmpdir);
+    const uploadId = req?.params?.videoId;
+    cb(null, path.join(tmpdir, uploadId));
   },
   filename: function (req, file, cb) {
     const suffix = "chunk_";
     // params
-    const uploadId = req?.params?.uploadId ?? generateId();
+    const uploadId = req?.params?.videoId ?? generateId();
     const chunkIndex = req?.params?.chunkIndex ?? generateId();
-    const fileExtenstion = file.originalname.split(".")[1];
+    const fileExtenstion = path.extname(file.originalname);
     cb(null, suffix + uploadId + "_" + chunkIndex + fileExtenstion);
   },
 });
+
+console.log("Middleware round trip");
 
 const multerMiddleware = multer({ storage: storage });
 

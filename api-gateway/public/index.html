@@ -18,13 +18,13 @@
 
   <script>
     const CHUNK_SIZE = 1024 * 1024
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
       e.preventDefault();
       const file = e.target.fileUpload.files[0]
       const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
       const fileName = file.name
 
-      fetch("http://localhost:3001/files/upload/init", {
+      const response = await fetch("http://localhost:3001/files/upload/init", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -32,9 +32,27 @@
         body: JSON.stringify({
           fileName, totalChunks
         })
-      }).then(res => res.json()).then(data => {
-        console.log(data)
-      })
+      });
+      const data = await response.json();
+      if (data.status != "Success") {
+        return alert("There is something wrong...")
+      }
+
+      const videoId = data.videoId;
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * CHUNK_SIZE
+        const end = Math.min(file.size, start + CHUNK_SIZE);
+        const chunk = file.slice(start, end)
+
+        const formData = new FormData();
+        formData.append("chunk", chunk)
+
+        await fetch(`http://localhost:3001/files/upload/${videoId}/${i}`, {
+          method: "POST",
+          body: formData
+        })
+      }
+
     }
   </script>
 </body>
