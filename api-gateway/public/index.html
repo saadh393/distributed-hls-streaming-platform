@@ -10,14 +10,32 @@
 <body>
   <h1>Upload Video</h1>
 
-  <form>
+  <form onsubmit="handleSubmit(event)" id="fileInput">
     <label for="fileUpload">Upload Your Video File</label>
     <input type="file" id="fileUpload" tabindex="0" />
     <button>Upload</button>
   </form>
 
   <script>
-    
+    const CHUNK_SIZE = 1024 * 1024
+    function handleSubmit(e) {
+      e.preventDefault();
+      const file = e.target.fileUpload.files[0]
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
+      const fileName = file.name
+
+      fetch("http://localhost:3001/files/upload/init", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          fileName, totalChunks
+        })
+      }).then(res => res.json()).then(data => {
+        console.log(data)
+      })
+    }
   </script>
 </body>
 

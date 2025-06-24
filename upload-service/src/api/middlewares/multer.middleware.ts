@@ -7,9 +7,12 @@ const storage = multer.diskStorage({
     cb(null, tmpdir);
   },
   filename: function (req, file, cb) {
-    const suffix = "tmp_";
-    const salt = generateId();
-    cb(null, suffix + salt + "_" + file?.originalname);
+    const suffix = "chunk_";
+    // params
+    const uploadId = req?.params?.uploadId ?? generateId();
+    const chunkIndex = req?.params?.chunkIndex ?? generateId();
+    const fileExtenstion = file.originalname.split(".")[1];
+    cb(null, suffix + uploadId + "_" + chunkIndex + fileExtenstion);
   },
 });
 

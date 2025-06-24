@@ -13,6 +13,9 @@ const app = express();
 
 app.use(cors());
 
+// Parse body
+app.use(express.json());
+
 // Help secure Express apps by setting HTTP response headers
 app.use(helmet());
 

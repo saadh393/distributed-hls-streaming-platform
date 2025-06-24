@@ -1,8 +1,8 @@
 /**
  * Generates Unqiue Id for Video
- * @returns Number
+ * @returns String
  */
-export default function generateId(): number {
+export default function generateId(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
   const timeInMilisecond = new Date().getTime().toString(16).slice(6); // last few number
   let uniqueId = "";
