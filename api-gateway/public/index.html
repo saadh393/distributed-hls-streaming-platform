@@ -2,57 +2,164 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upload Video</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resumable Video Uploader</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 1rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      background: black;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+
+    progress {
+      display: block;
+      width: 100%;
+      height: 20px;
+      margin-top: 1rem;
+    }
+
+    .log {
+      margin-top: 1rem;
+      background: #f5f5f5;
+      padding: 0.8rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>Upload Video</h1>
+  <h1>Upload a Video File</h1>
 
-  <form onsubmit="handleSubmit(event)" id="fileInput">
-    <label for="fileUpload">Upload Your Video File</label>
-    <input type="file" id="fileUpload" tabindex="0" />
-    <button>Upload</button>
+  <form id="uploadForm">
+    <label for="fileUpload">Choose your video file:</label>
+    <input type="file" id="fileUpload" />
+    <button type="submit">Upload</button>
   </form>
 
+  <progress id="uploadProgress" value="0" max="100" hidden></progress>
+
+  <div class="log" id="logBox"></div>
+
   <script>
-    const CHUNK_SIZE = 1024 * 1024
-    async function handleSubmit(e) {
+    const CHUNK_SIZE = 1024 * 1024; // 1MB
+    const uploadForm = document.getElementById("uploadForm");
+    const fileInput = document.getElementById("fileUpload");
+    const logBox = document.getElementById("logBox");
+
+    function log(msg) {
+      logBox.innerText += msg + "\n";
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    uploadForm.onsubmit = async (e) => {
       e.preventDefault();
-      const file = e.target.fileUpload.files[0]
-      const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
-      const fileName = file.name
+      handleUpload(e)
+    };
 
-      const response = await fetch("http://localhost:3001/files/upload/init", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          fileName, totalChunks
-        })
-      });
-      const data = await response.json();
-      if (data.status != "Success") {
-        return alert("There is something wrong...")
-      }
+    async function handleUpload(e) {
+      const file = fileInput.files[0];
+      if (!file) return alert("Please choose a file.");
 
-      const videoId = data.videoId;
-      for (let i = 0; i < totalChunks; i++) {
-        const start = i * CHUNK_SIZE
-        const end = Math.min(file.size, start + CHUNK_SIZE);
-        const chunk = file.slice(start, end)
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      const fileName = file.name;
+      log(`Total chunks: ${totalChunks}`);
 
-        const formData = new FormData();
-        formData.append("chunk", chunk)
+      const progressBar = progressBarDom(Date.now())
+      progressBar.hidden = false;
+      progressBar.max = totalChunks;
+      progressBar.value = 0;
 
-        await fetch(`http://localhost:3001/files/upload/${videoId}/${i}`, {
+      try {
+        // Step 1: Init
+        const initRes = await fetch("http://localhost:3001/files/upload/init", {
           method: "POST",
-          body: formData
-        })
-      }
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileName, totalChunks }),
+        });
+        const initData = await initRes.json();
+        if (initData.status !== "Success") throw new Error("Init failed");
 
+        const videoId = initData.videoId;
+        log(`Upload started. Video ID: ${videoId}`);
+
+        // Step 2: Upload Chunks
+        for (let i = 0; i < totalChunks; i++) {
+          const start = i * CHUNK_SIZE;
+          const end = Math.min(file.size, start + CHUNK_SIZE);
+          const chunk = file.slice(start, end);
+
+          const formData = new FormData();
+          formData.append("chunk", chunk);
+
+          const chunkRes = await fetch(`http://localhost:3001/files/upload/${videoId}/${i}`, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!chunkRes.ok) {
+            log(`❌ Chunk ${i} upload failed`);
+            throw new Error(`Chunk ${i} failed`);
+          }
+
+          progressBar.value = i + 1;
+          log(`✔️ Chunk ${i} uploaded`);
+        }
+
+        // Step 3: Complete Upload
+        const completeRes = await fetch(`http://localhost:3001/files/upload/${videoId}/complete`);
+        const completeData = await completeRes.json();
+
+        if (completeData.uploaded) {
+          log("✅ Video successfully uploaded and merged.");
+        } else {
+          log("⚠️ Upload completed, but server reports missing chunks:");
+          log(JSON.stringify(completeData.missingChunks));
+        }
+
+      } catch (err) {
+        log(`🚨 Error: ${err.message}`);
+      }
+    }
+
+    function progressBarDom(id) {
+      const p = document.createElement('progress')
+      p.id = id
+      document.body.appendChild(p)
+      return p
     }
   </script>
 </body>

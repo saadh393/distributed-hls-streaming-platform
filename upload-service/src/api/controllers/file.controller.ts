@@ -3,7 +3,8 @@ import fs from "fs";
 import path from "path";
 import checkPathExists from "../../utils/check-file-exists";
 import generateId from "../../utils/generate-id";
-import { tmpdir } from "./../../config/config";
+import missingChunks from "../../utils/get-missing-chunks";
+import { queuedDir, tmpdir } from "./../../config/config";
 
 function getMetaFilePath(videoId: string): string {
   return path.join(tmpdir, `/${videoId}/meta-${videoId}.json`);
@@ -16,6 +17,7 @@ async function init(req: Request, res: Response) {
   const metadata = {
     videoId,
     fileName,
+    extension: path.extname(fileName),
     totalChunks,
     recievedChunks: [],
   };
@@ -50,7 +52,7 @@ async function uploadChunk(req: Request, res: Response) {
   const dataObject = JSON.parse(contentBuffer.toString());
 
   // Updating meta chunkIndex and write
-  dataObject.recievedChunks.push(chunkIndex);
+  dataObject.recievedChunks.push(parseInt(chunkIndex));
   await fs.promises.writeFile(metaFilePath, JSON.stringify(dataObject));
 
   // Sending back response
@@ -60,7 +62,49 @@ async function uploadChunk(req: Request, res: Response) {
   });
 }
 
-function complete(req: Request, res: Response) {}
+async function complete(req: Request, res: Response) {
+  const { videoId } = req.params;
+
+  const metaDataPath = getMetaFilePath(videoId);
+  if (!(await checkPathExists(metaDataPath))) {
+    throw new Error("Invalide Video id");
+  }
+
+  const contentString = await fs.promises.readFile(metaDataPath, "utf-8");
+  const meta = JSON.parse(contentString);
+
+  // If some thunks are missing send back the chunks number
+  console.log(meta.totalChunks, meta.recievedChunks.length);
+  if (meta.totalChunks !== meta.recievedChunks.length) {
+    const { totalChunks, recievedChunks } = meta;
+
+    return res.status(400).json({
+      status: "Failed",
+      message: "There missing chunk/chunks",
+      missingChunks: missingChunks(totalChunks, recievedChunks),
+    });
+  }
+
+  const completePath = path.join(queuedDir, `video-${videoId}.${meta.extension}`);
+  const writeableStream = fs.createWriteStream(completePath);
+
+  for (let i = 0; i < meta.totalChunks; i++) {
+    const chunkPath = path.join(tmpdir, videoId, `chunk_${videoId}_${i}`);
+    const readableStream = fs.createReadStream(chunkPath);
+    await new Promise((resolve, rejects) => {
+      readableStream.pipe(writeableStream, { end: false });
+      // @ts-ignore
+      readableStream.once("end", resolve);
+      readableStream.once("error", rejects);
+    });
+
+    await fs.promises.rm(chunkPath);
+  }
+
+  writeableStream.end();
+
+  res.json({ uploaded: true, path: `/uploads/complete/${meta.filename}` });
+}
 
 const fileController = {
   init,

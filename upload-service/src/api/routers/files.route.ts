@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post("/upload/init", validateRequest(createUserSchema), catchAsync(fileController.init));
 
-router.post("/upload/:videoId/complete", catchAsync(fileController.complete));
+router.get("/upload/:videoId/complete", catchAsync(fileController.complete));
 
 router.post("/upload/:videoId/:chunkIndex", multerMiddleware.single("chunk"), catchAsync(fileController.uploadChunk));
 
