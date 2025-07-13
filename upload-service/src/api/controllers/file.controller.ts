@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
+import { videoQueue } from "../../config/queue";
 import checkPathExists from "../../utils/check-file-exists";
 import generateId from "../../utils/generate-id";
 import missingChunks from "../../utils/get-missing-chunks";
@@ -73,8 +74,7 @@ async function complete(req: Request, res: Response) {
   const contentString = await fs.promises.readFile(metaDataPath, "utf-8");
   const meta = JSON.parse(contentString);
 
-  // If some thunks are missing send back the chunks number
-  console.log(meta.totalChunks, meta.recievedChunks.length);
+  // If some chunks are missing send back the chunks number
   if (meta.totalChunks !== meta.recievedChunks.length) {
     const { totalChunks, recievedChunks } = meta;
 
@@ -102,6 +102,13 @@ async function complete(req: Request, res: Response) {
   }
 
   writeableStream.end();
+
+  // Virus Scan and Move to Storage Service
+  await videoQueue.add("video-process", {
+    videoId,
+    meta,
+    completePath,
+  });
 
   res.json({ uploaded: true, path: `/uploads/complete/${meta.filename}` });
 }

@@ -1,4 +1,13 @@
 services:
+  redis:
+    image: redis/redis-stack:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+    environment:
+      - REDIS_ARGS="--requirepass mypassword"ls
+
   api-gateway:
     build: ./api-gateway/
     container_name: api-gateway
@@ -22,3 +31,8 @@ services:
     command: npm run dev
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=mypassword
+    depends_on:
+      - redis
