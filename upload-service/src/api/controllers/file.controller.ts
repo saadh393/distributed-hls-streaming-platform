@@ -85,7 +85,7 @@ async function complete(req: Request, res: Response) {
     });
   }
 
-  const completePath = path.join(queuedDir, `video-${videoId}.${meta.extension}`);
+  const completePath = path.join(queuedDir, `video-${videoId}${meta.extension}`);
   const writeableStream = fs.createWriteStream(completePath);
 
   for (let i = 0; i < meta.totalChunks; i++) {
@@ -110,7 +110,7 @@ async function complete(req: Request, res: Response) {
     completePath,
   });
 
-  res.json({ uploaded: true, path: `/uploads/complete/${meta.filename}` });
+  res.json({ uploaded: true, path: completePath });
 }
 
 const fileController = {
