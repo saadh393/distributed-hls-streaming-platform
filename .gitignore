@@ -1,0 +1,9 @@
+*/node_modules/
+./min-io/drive/*
+
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.flv
+prompt.md
