@@ -16,8 +16,6 @@ export default function ErrorHandlingMiddleware(error: ApiError, req: Request, r
     errorMessage = error.issues.map((e: any) => e.message).join(" ");
   }
 
-  console.log(JSON.stringify(error, null, 2));
-
   res.status(statusCode).json({
     status: "Error",
     message: errorMessage,

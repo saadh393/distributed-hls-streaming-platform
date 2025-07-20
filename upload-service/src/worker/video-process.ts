@@ -2,6 +2,7 @@ import { Job, Worker } from "bullmq";
 import fs from "fs";
 import IORedis from "ioredis";
 import minio, { BUCKET } from "../config/minio";
+import { trandcodeQueue } from "../config/queue";
 import checkPathExists from "../utils/check-file-exists";
 
 interface VideoProcessJobData {
@@ -32,8 +33,6 @@ connection.on("ready", () => {
 });
 
 export function startWorker() {
-  console.log(process.env.REDIS_HOST, process.env.REDIS_PORT, process.env.REDIS_PASSWORD);
-
   try {
     const worker = new Worker("videoQueue", handleUploadWorker, { connection });
 
@@ -51,7 +50,6 @@ export function startWorker() {
 
 async function handleUploadWorker(job: Job<VideoProcessJobData, void, string>): Promise<void> {
   try {
-    console.log("Worker just Started");
     const { videoId, meta, completePath } = job.data;
 
     const isValidCompletePath: boolean = await checkPathExists(completePath);
@@ -61,6 +59,9 @@ async function handleUploadWorker(job: Job<VideoProcessJobData, void, string>): 
 
     const fileStream: fs.ReadStream = fs.createReadStream(completePath);
     await minio.putObject(BUCKET, videoId, fileStream);
+
+    // Add job to transcode service
+    await trandcodeQueue.add("transcodeJob", meta);
 
     // Remove the file
     fs.unlink(completePath, () => {

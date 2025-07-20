@@ -18,8 +18,6 @@ const storage = multer.diskStorage({
   },
 });
 
-console.log("Middleware round trip");
-
 const multerMiddleware = multer({ storage: storage });
 
 export default multerMiddleware;

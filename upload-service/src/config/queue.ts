@@ -23,8 +23,5 @@ connection.on("error", (err) => {
   console.error("Queue Redis connection error:", err);
 });
 
-connection.on("ready", () => {
-  console.log("Queue Redis is ready");
-});
-
 export const videoQueue = new Queue("videoQueue", { connection });
+export const trandcodeQueue = new Queue("transcodeQueue", { connection });

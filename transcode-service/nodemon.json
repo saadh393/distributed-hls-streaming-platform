@@ -1,0 +1,10 @@
+{
+  "verbose": true,
+  "ignore": ["node_modules", "src/tmp", "src/queued"],
+  "watch": ["src"],
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "ext": "ts,json",
+  "exec": "ts-node-dev ./src/index.ts "
+}
