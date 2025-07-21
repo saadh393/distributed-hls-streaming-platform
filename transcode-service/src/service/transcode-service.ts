@@ -1,10 +1,12 @@
 const { spawn } = require("child_process");
+import fs from "fs";
+import path from "path";
 
 const resolutions = [
-  { name: "1080p", width: 1920, height: 1080 },
-  { name: "720p", width: 1280, height: 720 },
-  { name: "480p", width: 854, height: 480 },
-  { name: "360p", width: 640, height: 360 },
+  // { name: "1080p", width: 1920, height: 1080, bandwidth: 5000000 },
+  // { name: "720p", width: 1280, height: 720, bandwidth: 2800000 },
+  // { name: "480p", width: 854, height: 480, bandwidth: 1400000 },
+  { name: "360p", width: 640, height: 360, bandwidth: 800000 },
 ];
 
 export default function transcodeVideo(inputPath: string, outputDir: string): Promise<string> {
@@ -54,6 +56,13 @@ export default function transcodeVideo(inputPath: string, outputDir: string): Pr
 
     ffmpeg.on("exit", (code: number) => {
       if (code === 0) {
+        let masterContent = "#EXTM3U\n#EXT-X-VERSION:3\n\n";
+        resolutions.forEach((res) => {
+          masterContent += `#EXT-X-STREAM-INF:BANDWIDTH=${res.bandwidth},RESOLUTION=${res.width}x${res.height}\n`;
+          masterContent += `${res.name}.m3u8\n\n`;
+        });
+
+        fs.writeFileSync(path.join(outputDir, "master.m3u8"), masterContent);
         resolve("Transcoding complete");
       } else {
         reject(new Error(`FFmpeg exited with code ${code}`));

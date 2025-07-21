@@ -7,9 +7,17 @@ import checkPathExists from "../utils/check-file-exists";
 
 interface VideoProcessJobData {
   videoId: string;
-  meta: Record<string, unknown>;
+  meta: MetaData;
   completePath: string;
 }
+
+type MetaData = {
+  videoId: string;
+  fileName: string;
+  extension: string;
+  totalChunks: number;
+  recievedChunks: number[];
+};
 
 const connectionConfig: any = {
   host: process.env.REDIS_HOST || "localhost",
@@ -61,7 +69,7 @@ async function handleUploadWorker(job: Job<VideoProcessJobData, void, string>): 
     await minio.putObject(BUCKET, videoId, fileStream);
 
     // Add job to transcode service
-    await trandcodeQueue.add("transcodeJob", meta);
+    await trandcodeQueue.add("transcodeJob", { meta });
 
     // Remove the file
     fs.unlink(completePath, () => {

@@ -10,6 +10,9 @@ RUN npm install
 
 COPY . .
 
+ENV REDIS_HOST=redis
+ENV REDIS_PORT=6379
+
 EXPOSE 3003
 
 CMD ["npm", "run", "dev"]

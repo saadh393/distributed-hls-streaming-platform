@@ -1,10 +1,8 @@
 import dotenv from "dotenv";
-import transcodeVideo from "./service/transcode-service";
 dotenv.config();
 
-// import "./worker/transcode-worker";
+import { TRANSCODED_BUCKET } from "./config/app-config";
+import bucketInit from "./utils/bucket-init";
+import "./worker/transcode-worker";
 
-transcodeVideo(
-  "/Users/sadh/Programming/video-streaming-platform/video.mov",
-  "/Users/sadh/Programming/video-streaming-platform/"
-);
+bucketInit(TRANSCODED_BUCKET).then(() => {});

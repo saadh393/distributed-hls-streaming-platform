@@ -1,6 +1,6 @@
 import { S3Client } from "@aws-sdk/client-s3";
 
-const endPoint = `http://localhost:${process.env.MINIO_PORT || 9000}`;
+const endPoint = `http://${process.env.MINIO_HOST}:${process.env.MINIO_PORT || 9000}`;
 
 const storageConfig = new S3Client({
   endpoint: endPoint,
