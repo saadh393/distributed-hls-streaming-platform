@@ -27,13 +27,17 @@ const transcodeWorker = new Worker<TranscodeJobData>(
     const { meta } = job.data;
     const { videoId, fileName } = meta;
     const outputDir = path.join(transcodePath, videoId);
+    let downloadedFilePath = "";
+
     console.log(`Starting transcoding for videoId: ${videoId}, fileName: ${fileName}`);
+
     try {
       // Create output directory for transcoded files
       await fs.mkdir(outputDir, { recursive: true });
 
       // Step 1 : Download the file from minio
-      const downloadedFilePath = await downloadFile(UPLOADS_BUCKET, videoId, fileName);
+      downloadedFilePath = await downloadFile(UPLOADS_BUCKET, videoId, fileName);
+
       // Step 2 : Transcode the video using ffmpeg
       await transcodeVideo(downloadedFilePath, outputDir);
 
@@ -45,10 +49,8 @@ const transcodeWorker = new Worker<TranscodeJobData>(
       throw error;
     } finally {
       // Clean up the output directory
-      await fs
-        .rm(outputDir, { recursive: true, force: true })
-        .catch(() => {})
-        .finally(() => console.log(`Cleaned up output directory for videoId: ${videoId}`));
+      await fs.rm(outputDir, { recursive: true, force: true });
+      await fs.rm(downloadedFilePath);
     }
   },
   { connection }
