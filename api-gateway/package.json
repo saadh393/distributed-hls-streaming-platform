@@ -14,15 +14,18 @@
   "description": "",
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
+    "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.44.4",
     "express": "^5.1.0",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.0.1",
+    "drizzle-kit": "^0.31.4",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   }

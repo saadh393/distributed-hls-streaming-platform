@@ -71,3 +71,37 @@ services:
       - MINIO_ROOT_PASSWORD=CHANGEME123
     depends_on:
       - redis
+
+  streaming-service:
+    build: ./streaming-service
+    container_name: streaming-service
+    ports:
+      - "3004:3004"
+    volumes:
+      - ./streaming-service/:/app
+    command: npm run dev
+    env_file:
+      - ./streaming-service/.env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MINIO_HOST=minio
+      - MINIO_PORT=9000
+      - MINIO_ROOT_USER=ROOTUSER
+      - MINIO_ROOT_PASSWORD=CHANGEME123
+    depends_on:
+      - redis
+
+  postgresql:
+    image: postgres:15
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: example
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080

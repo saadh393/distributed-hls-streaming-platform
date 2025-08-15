@@ -2,7 +2,7 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { EXPIRE_IN } from "./app-config";
 
-const endPoint = `http://localhost:9000`;
+const endPoint = `http://${process.env.MINIO_HOST}:${process.env.MINIO_PORT}`;
 
 const storageClient = new S3Client({
   region: "us-east-1",
