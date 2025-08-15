@@ -8,8 +8,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { LogOut, Upload, User, Video } from "lucide-react";
+import { NavLink, useLocation } from "react-router";
 
-export function Sidebar({ activeTab, onTabChange }) {
+export function Sidebar({ onTabChange }) {
+  let location = useLocation();
+
+  const activeTab = location.pathname;
+
   return (
     <div className="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Header */}
@@ -19,33 +24,36 @@ export function Sidebar({ activeTab, onTabChange }) {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        <Button
-          variant={activeTab === "videos" ? "default" : "ghost"}
-          className={cn(
-            "w-full justify-start gap-3",
-            activeTab === "videos"
-              ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
-              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          )}
-          onClick={() => onTabChange("videos")}
-        >
-          <Video className="h-4 w-4" />
-          Videos
-        </Button>
+        <NavLink to={"/"}>
+          <Button
+            variant={activeTab === "/" ? "default" : "ghost"}
+            className={cn(
+              "w-full justify-start gap-3",
+              activeTab === "/"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            )}
+            onClick={() => onTabChange("videos")}
+          >
+            <Video className="h-4 w-4" />
+            Videos
+          </Button>
+        </NavLink>
 
-        <Button
-          variant={activeTab === "add-video" ? "default" : "ghost"}
-          className={cn(
-            "w-full justify-start gap-3",
-            activeTab === "add-video"
-              ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
-              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          )}
-          onClick={() => onTabChange("add-video")}
-        >
-          <Upload className="h-4 w-4" />
-          Add Video
-        </Button>
+        <NavLink to={"/add-video"}>
+          <Button
+            variant={activeTab === "/add-video" ? "default" : "ghost"}
+            className={cn(
+              "w-full justify-start gap-3",
+              activeTab === "/add-video"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            )}
+          >
+            <Upload className="h-4 w-4" />
+            Add Video
+          </Button>
+        </NavLink>
       </nav>
 
       {/* User Profile */}

@@ -1,7 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Play } from "lucide-react";
-import Link from "next/link";
 
 const mockVideos = [
   {
@@ -60,7 +59,7 @@ export function VideosGrid() {
       <h2 className="text-2xl font-semibold mb-6 text-foreground">Your Videos</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {mockVideos.map((video) => (
-          <Link key={video.id} href={`/video/${video.id}`}>
+          <a key={video.id} href={`/video/${video.id}`}>
             <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
               <CardContent className="p-0">
                 <div className="relative">
@@ -93,7 +92,7 @@ export function VideosGrid() {
                 </div>
               </CardContent>
             </Card>
-          </Link>
+          </a>
         ))}
       </div>
     </div>
