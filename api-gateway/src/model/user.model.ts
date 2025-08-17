@@ -6,7 +6,7 @@ export const user_table = pg.pgTable("user", {
   id: pg.bigserial({ mode: "number" }).primaryKey(),
   name: pg.varchar({ length: 255 }).notNull(),
   email: pg.varchar({ length: 255 }).notNull().unique(),
-  password: pg.varchar({ length: 72 }).notNull(),
+  password: pg.varchar({ length: 255 }).notNull(),
 });
 
 export const user_relation = relations(user_table, ({ many }) => ({

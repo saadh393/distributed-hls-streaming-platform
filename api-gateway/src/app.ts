@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
@@ -14,6 +15,12 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Cors
 app.use(cors());
+
+// Body Parser
+app.use(express.json());
+
+// Cookie Parser
+app.use(cookieParser());
 
 app.use(router);
 
