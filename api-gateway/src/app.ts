@@ -6,15 +6,20 @@ import path from "path";
 import errorMiddleware from "./api/middlewares/error.middleware";
 import notfoundMiddleware from "./api/middlewares/notfound.middleware";
 import router from "./api/routes";
+import { corsOptions } from "./utils/cors-options";
 dotenv.config();
 
 const app = express();
 
+// Cors
+// @ts-ignore
+app.use(cors(corsOptions));
+
+// @ts-ignore
+// app.options("*", cors());
+
 // Public Directory
 app.use(express.static(path.join(__dirname, "public")));
-
-// Cors
-app.use(cors());
 
 // Body Parser
 app.use(express.json());

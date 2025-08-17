@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { db_connection } from "../../config/db-config";
 import { user_table } from "../../model/user.model";
 
-export async function loginController(req: Request, res: Response) {
+async function login(req: Request, res: Response) {
   const { email, password } = req.body;
 
   const db = db_connection();
@@ -42,7 +42,7 @@ export async function loginController(req: Request, res: Response) {
   res.status(201).json({ user: dbUser });
 }
 
-export async function registrationController(req: Request, res: Response) {
+async function registration(req: Request, res: Response) {
   const { email, password, name } = req.body;
 
   try {
@@ -70,9 +70,12 @@ export async function registrationController(req: Request, res: Response) {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 60 * 60 * 1000,
     });
+
+    // @ts-ignore
+    delete created.password;
     res.status(201).json({ user: created });
   } catch (err) {
     console.log(err);
@@ -80,7 +83,7 @@ export async function registrationController(req: Request, res: Response) {
   }
 }
 
-export async function meController(req: Request, res: Response) {
+async function me(req: Request, res: Response) {
   // @ts-ignore
   const { email } = req.user;
 
@@ -99,3 +102,18 @@ export async function meController(req: Request, res: Response) {
     user: userObj,
   });
 }
+
+async function logout(req: Request, res: Response) {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 0,
+  });
+
+  res.status(200).json({ message: "Logged out successfully" });
+}
+
+const authController = { login, registration, me, logout };
+
+export default authController;

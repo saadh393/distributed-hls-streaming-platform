@@ -1,18 +1,15 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { cn } from "@/lib/utils";
-import { LogOut, Upload, User, Video } from "lucide-react";
+import { Upload, Video } from "lucide-react";
 import { NavLink, useLocation } from "react-router";
+import { useApp } from "../context/app-context";
+import LoginButton from "./login-btn";
+import UserProfile from "./user-profile";
 
 export function Sidebar({ onTabChange }) {
+  const { user } = useApp();
   let location = useLocation();
-
   const activeTab = location.pathname;
 
   return (
@@ -57,32 +54,7 @@ export function Sidebar({ onTabChange }) {
       </nav>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-sidebar-border">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start gap-3 p-2 h-auto">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col items-start">
-                <span className="text-sm font-medium text-sidebar-foreground">John Doe</span>
-                <span className="text-xs text-muted-foreground">john@example.com</span>
-              </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <div className="p-4 border-t border-sidebar-border">{user ? <UserProfile /> : <LoginButton />}</div>
     </div>
   );
 }
