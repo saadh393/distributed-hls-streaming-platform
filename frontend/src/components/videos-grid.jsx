@@ -3,56 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Play } from "lucide-react";
 import { useApp } from "../context/app-context";
 
-const mockVideos = [
-  {
-    id: 1,
-    title: "Getting Started with React",
-    publisher: "Tech Academy",
-    publisherAvatar: "/placeholder.svg?height=32&width=32",
-    thumbnail: "/placeholder.svg?height=180&width=320",
-    duration: "12:34",
-  },
-  {
-    id: 2,
-    title: "Advanced JavaScript Concepts",
-    publisher: "Code Masters",
-    publisherAvatar: "/placeholder.svg?height=32&width=32",
-    thumbnail: "/placeholder.svg?height=180&width=320",
-    duration: "18:45",
-  },
-  {
-    id: 3,
-    title: "Building Modern UIs",
-    publisher: "Design Pro",
-    publisherAvatar: "/placeholder.svg?height=32&width=32",
-    thumbnail: "/placeholder.svg?height=180&width=320",
-    duration: "25:12",
-  },
-  {
-    id: 4,
-    title: "Database Design Patterns",
-    publisher: "Data Experts",
-    publisherAvatar: "/placeholder.svg?height=32&width=32",
-    thumbnail: "/placeholder.svg?height=180&width=320",
-    duration: "32:18",
-  },
-  {
-    id: 5,
-    title: "API Development Best Practices",
-    publisher: "Backend Guru",
-    publisherAvatar: "/placeholder.svg?height=32&width=32",
-    thumbnail: "/placeholder.svg?height=180&width=320",
-    duration: "28:56",
-  },
-  {
-    id: 6,
-    title: "Mobile App Development",
-    publisher: "Mobile Dev",
-    publisherAvatar: "/placeholder.svg?height=32&width=32",
-    thumbnail: "/placeholder.svg?height=180&width=320",
-    duration: "41:23",
-  },
-];
 
 export function VideosGrid() {
   const { videos } = useApp();

@@ -99,7 +99,7 @@ async function complete(req: Request, res: Response) {
 
   writeableStream.on("finish", () => {
     console.log("All chunks written successfully");
-    fs.rmdir(path.join(tmpdir, videoId));
+    fs.rm(path.join(tmpdir, videoId), { recursive: true, force: true });
   });
 
   // Virus Scan and Move to Storage Service

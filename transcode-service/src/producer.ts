@@ -1,9 +1,15 @@
-import { Queue } from "bullmq";
-import connection from "./config/redis-config";
+// Goal -
+// 1 - Test function of Duration Extraction
+// 2 - Test function of Thumbnail Generation
 
-const messageQueue = new Queue("transcodeQueue", { connection: connection });
+import getDurationInSecond from "./service/duration-service";
+import { makeHeroThumbnail } from "./service/thumbnail-service";
 
-messageQueue.add("transcodeJob", {
-  videoId: "12345",
-  userId: "67890",
-});
+// downloadFile(UPLOADS_BUCKET, "CF2a18b6JP", "CF2a18b6JP.mov");
+
+async function main() {
+  const time = await getDurationInSecond("/app/tmp/CF2a18b6JP.mov");
+  makeHeroThumbnail("/app/tmp/CF2a18b6JP.mov", "/app/tmp/CF2a18b6JP.webp", time);
+}
+
+main();

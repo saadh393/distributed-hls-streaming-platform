@@ -6,6 +6,7 @@ import LoginPage from "./pages/Login-page";
 import RegisterPage from "./pages/Register-page";
 import AddVideoPage from "./pages/add-video-page";
 import VideoPlayer from "./pages/video-page";
+import ManageVideosPage from "./pages/ManageVideos-page";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/add-video" element={<AddVideoPage />} />
+              <Route path="/manage-videos" element={<ManageVideosPage />} />
             </Route>
             <Route path="/video/:slug" element={<VideoPlayer />} />
             <Route path="/login" element={<LoginPage />} />

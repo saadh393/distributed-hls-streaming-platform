@@ -70,4 +70,28 @@ async function uploadTranscodedFiles(videoId: string, folderPath: string): Promi
   console.log("All files uploaded successfully to S3 bucket:", TRANSCODED_BUCKET);
 }
 
-export { downloadFile, uploadTranscodedFiles };
+async function uploadThumbnail(videoId: string, path: string) {
+  // Check if file exists
+  const isExists = await fs.stat(path);
+  if (!isExists) {
+    throw new Error("File does not exist");
+  }
+
+  const uploadCommand = new PutObjectCommand({
+    Bucket: TRANSCODED_BUCKET,
+    Key: `${videoId}/thumbnail.webp`,
+    Body: createReadStream(path),
+    ContentType: "image/webp",
+  });
+
+  try {
+    await storageConfig.send(uploadCommand);
+
+    // remove the file
+    await fs.unlink(path);
+  } catch (error) {
+    console.error("Error uploading thumbnail:", error);
+  }
+}
+
+export { downloadFile, uploadThumbnail, uploadTranscodedFiles };

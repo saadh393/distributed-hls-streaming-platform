@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 
 import { cn } from "@/lib/utils";
-import { Upload, Video } from "lucide-react";
+import { List, Upload, Video } from "lucide-react";
 import { NavLink, useLocation } from "react-router";
 import { useApp } from "../context/app-context";
 import LoginButton from "./login-btn";
@@ -49,6 +49,21 @@ export function Sidebar({ onTabChange }) {
           >
             <Upload className="h-4 w-4" />
             Add Video
+          </Button>
+        </NavLink>
+
+        <NavLink to={"/manage-videos"}>
+          <Button
+            variant={activeTab === "/manage-videos" ? "default" : "ghost"}
+            className={cn(
+              "w-full justify-start gap-3",
+              activeTab === "/add-video"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            )}
+          >
+            <List className="h-4 w-4" />
+            Manage Video
           </Button>
         </NavLink>
       </nav>

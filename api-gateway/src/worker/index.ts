@@ -5,6 +5,7 @@ import { VIDEO_STATUS } from "../config/contrains";
 import { db_connection } from "../config/db-config";
 import { redisConnection } from "../config/queue-config";
 import { video_table } from "../model/video.model";
+import { formatDuration } from "../utils/format-duration";
 
 export const videoProcessWorker = new Worker("video", workerCb, { connection: redisConnection });
 
@@ -21,9 +22,22 @@ const payloadSchema = z.object({
   videoId: z.string(),
 });
 
-async function workerCb(job: Job) {
-  // Job Can be  - Video Processing Status - processing, transcoding, Success, Error, Corrupted
+const metaSchema = z.object({
+  duration: z.number(),
+  thumbnail: z.string(),
+  videoId: z.string(),
+});
 
+async function workerCb(job: Job) {
+  // Check job, if job is - db-update then continue if job is meta-update then another logic
+  if (job.name === "db-update") {
+    await handleDbUpdate(job);
+  } else if (job.name === "meta-update") {
+    await updateMeta(job);
+  }
+}
+
+async function handleDbUpdate(job: Job) {
   const parse = z.parse(payloadSchema, job.data);
   if (!parse) {
     throw new Error("Invalid job data");
@@ -34,6 +48,23 @@ async function workerCb(job: Job) {
   const db = db_connection();
   await db.transaction(async (tx) => {
     await tx.update(video_table).set({ status: jobStatus }).where(eq(video_table.id, videoId));
+  });
+}
+
+async function updateMeta(job: Job) {
+  const parse = z.parse(metaSchema, job.data);
+  if (!parse) {
+    throw new Error("Invalid job data");
+  }
+
+  const { duration, thumbnail, videoId } = parse;
+
+  const db = db_connection();
+  await db.transaction(async (tx) => {
+    await tx
+      .update(video_table)
+      .set({ duration: formatDuration(duration), thumbnail })
+      .where(eq(video_table.id, videoId));
   });
 }
 

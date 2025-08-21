@@ -3,7 +3,7 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache ffmpeg
+RUN apk add --no-cache ffmpeg ffmpeg-libs
 
 COPY package*.json ./
 RUN npm install

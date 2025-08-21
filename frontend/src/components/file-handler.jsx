@@ -1,16 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { Upload, Video, X } from "lucide-react";
+import { Play, Upload, Video, VideoIcon, X } from "lucide-react";
 import { useState } from "react";
 import { Progress } from "./ui/progress";
 import { complete_upload, fetch_signed_url, get_upload_permission, upload_chunk } from "../lib/upload-api";
 import Error from "./error-message";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 const CHUNK_SIZE = 1024 * 1024; // 1MB
 
-export default function FileHandler({ selectedFile, setSelectedFile }) {
+export default function FileHandler({ videoId, setVideoId }) {
   const [dragActive, setDragActive] = useState(false);
   const [uploadProgress, setUpload] = useState(0)
   const [error, setError] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -87,10 +89,30 @@ export default function FileHandler({ selectedFile, setSelectedFile }) {
       // Step 4 : Complete the Upload
       const baseurl = `${origin}/files/upload/${videoId}/complete`
       await complete_upload({ baseurl, token })
+      setVideoId(videoId)
+      setUpload(100);
+
     } catch (error) {
       setError(error.message)
     }
 
+  }
+
+  if (videoId && uploadProgress == 100) {
+    return <Card>
+      <CardHeader>
+        <CardTitle>Upload Complete</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="bg-zinc-800 w-full aspect-video h-auto grid place-items-center rounded-md">
+          <Play className="h-12 w-12 text-muted-foreground" />
+        </div>
+        <div className="flex-1 mt-4">
+          <p className="font-medium">{selectedFile.name}</p>
+          <p className="text-sm text-muted-foreground">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+        </div>
+      </CardContent>
+    </Card>
   }
 
 

@@ -2,10 +2,12 @@ import { Job, Worker } from "bullmq";
 import fs from "fs/promises";
 import path from "path";
 import { UPLOADS_BUCKET } from "../config/app-config";
-import { transcodePath } from "../config/path-config";
+import { downloadPath, transcodePath } from "../config/path-config";
 import { video_status_queue } from "../config/queue-config";
 import connection from "../config/redis-config";
-import { downloadFile, uploadTranscodedFiles } from "../service/storage-service";
+import getDurationInSecond from "../service/duration-service";
+import { downloadFile, uploadThumbnail, uploadTranscodedFiles } from "../service/storage-service";
+import { makeHeroThumbnail } from "../service/thumbnail-service";
 import transcodeVideo from "../service/transcode-service";
 import logger from "../utils/logger";
 
@@ -38,16 +40,25 @@ const transcodeWorker = new Worker<TranscodeJobData>(
       // Create output directory for transcoded files
       await fs.mkdir(outputDir, { recursive: true });
 
-      // Step 1 : Download the file from minio
+      // Download the file from minio
       downloadedFilePath = await downloadFile(UPLOADS_BUCKET, videoId, fileName);
 
-      // Step 2 : Transcode the video using ffmpeg
+      // Extract video duration and Make thumbnail
+      const time = await getDurationInSecond(downloadedFilePath);
+      const outputFileName = path.join(downloadPath, `${videoId}.webp`);
+      await makeHeroThumbnail(downloadedFilePath, outputFileName, time);
+
+      // Transcode the video using ffmpeg
       await video_status_queue.add("db-update", { videoId, status: "transcoding" });
       await transcodeVideo(downloadedFilePath, outputDir);
 
-      // Step 3 : Upload the transcoded files back to minio
+      // Upload the transcoded files back to minio
       await uploadTranscodedFiles(videoId, outputDir);
+      await uploadThumbnail(videoId, outputFileName);
+
+      // notify to update db - api-gateway
       await video_status_queue.add("db-update", { videoId, status: "success" });
+      await video_status_queue.add("meta-update", { videoId, duration: time, thumbnail: `${videoId}/thumbnail.webp` });
     } catch (error) {
       // Log error and rethrow to let BullMQ handle job failure
       await video_status_queue.add("db-update", { videoId, status: "failed" });

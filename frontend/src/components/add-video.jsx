@@ -5,16 +5,42 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import FileHandler from "./file-handler";
+import { add_video } from "../lib/upload-api";
+import Error from "./error-message";
+import Success from "./success-message";
+import { useNavigate } from "react-router";
 
 export function AddVideo() {
-  const [selectedFile, setSelectedFile] = useState(false);
+  const [videoId, setVideoId] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [error, setError] = useState(null)
+  const [response, setResponse] = useState(null)
+  const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle video upload logic here
-    console.log("[v0] Upload submitted:", { file: selectedFile, title, description });
+
+
+    const formData = {
+      title, description, video_id: videoId
+    }
+
+    try {
+      const baseurl = "/api/video/";
+      const response = await add_video({ baseurl, formData });
+      setResponse(response?.message || "Success")
+      setTitle("")
+      setDescription("")
+      setVideoId(false);
+
+      setTimeout(() => {
+        navigate("/")
+      }, 2000)
+
+    } catch (err) {
+      setError(err.message)
+    }
   };
 
   return (
@@ -28,7 +54,7 @@ export function AddVideo() {
             <CardTitle>Video File</CardTitle>
           </CardHeader>
           <CardContent>
-            <FileHandler selectedFile={selectedFile} setSelectedFile={setSelectedFile} />
+            <FileHandler videoId={videoId} setVideoId={setVideoId} />
           </CardContent>
         </Card>
 
@@ -38,7 +64,7 @@ export function AddVideo() {
             <CardTitle>Video Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="title">Title *</Label>
               <Input
                 id="title"
@@ -49,7 +75,7 @@ export function AddVideo() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -62,9 +88,12 @@ export function AddVideo() {
           </CardContent>
         </Card>
 
+        <Error cancel={() => setError(null)}>{error}</Error>
+        <Success cancel={() => setResponse(null)}>{response}</Success>
+
         {/* Submit Button */}
         <div className="flex justify-end">
-          <Button type="submit" disabled={!selectedFile || !title.trim()} className="px-8">
+          <Button type="submit" disabled={!videoId || !title.trim()} className="px-8">
             Upload Video
           </Button>
         </div>
