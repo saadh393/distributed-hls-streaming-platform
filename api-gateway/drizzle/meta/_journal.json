@@ -29,6 +29,13 @@
       "when": 1755363582143,
       "tag": "0003_wet_mattie_franklin",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1755698092757,
+      "tag": "0004_heavy_enchantress",
+      "breakpoints": true
     }
   ]
 }

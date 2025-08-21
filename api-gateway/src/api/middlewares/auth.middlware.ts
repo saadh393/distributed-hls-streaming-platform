@@ -9,6 +9,7 @@ export default function authMiddleware(req: Request, res: Response, next: NextFu
       res.status(401).json({
         message: "Not authenticated",
       });
+      return;
     }
 
     // Verify and decode the token
@@ -19,5 +20,6 @@ export default function authMiddleware(req: Request, res: Response, next: NextFu
     next();
   } catch (error) {
     res.status(401).json({ message: "Invalid or expired token" });
+    return;
   }
 }

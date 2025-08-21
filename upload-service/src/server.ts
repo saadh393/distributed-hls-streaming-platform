@@ -4,7 +4,7 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import { errorHandlingMiddleware, notFoundMiddleware } from "./api/middlewares";
-import { filesRouter } from "./api/routers";
+import filesRouter from "./api/routers/files.route";
 
 // Immediately Setting up .env
 dotenv.config();
@@ -12,9 +12,6 @@ dotenv.config();
 const app = express();
 
 app.use(cors());
-
-// Parse body
-app.use(express.json());
 
 // Help secure Express apps by setting HTTP response headers
 app.use(helmet());

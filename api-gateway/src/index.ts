@@ -1,4 +1,5 @@
 import app from "./app";
+import "./worker/index";
 
 const PORT = process.env.PORT || 3000;
 

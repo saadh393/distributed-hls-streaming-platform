@@ -2,7 +2,7 @@ import { Job, Worker } from "bullmq";
 import fs from "fs";
 import IORedis from "ioredis";
 import minio, { BUCKET } from "../config/minio";
-import { trandcodeQueue } from "../config/queue";
+import { transcodeQueue } from "../config/queue";
 import checkPathExists from "../utils/check-file-exists";
 
 interface VideoProcessJobData {
@@ -69,7 +69,9 @@ async function handleUploadWorker(job: Job<VideoProcessJobData, void, string>): 
     await minio.putObject(BUCKET, videoId, fileStream);
 
     // Add job to transcode service
-    await trandcodeQueue.add("transcodeJob", { meta });
+    console.log("Adding job to transcode queue for videoId:", videoId);
+    meta.videoId = videoId;
+    await transcodeQueue.add("transcodeJob", { meta });
 
     // Remove the file
     fs.unlink(completePath, () => {

@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import fs from "fs";
+import { createReadStream, createWriteStream } from "fs";
+import fs from "fs/promises";
 import path from "path";
 import { videoQueue } from "../../config/queue";
 import checkPathExists from "../../utils/check-file-exists";
-import generateId from "../../utils/generate-id";
 import missingChunks from "../../utils/get-missing-chunks";
 import { queuedDir, tmpdir } from "./../../config/config";
 
@@ -12,34 +12,27 @@ function getMetaFilePath(videoId: string): string {
 }
 
 async function init(req: Request, res: Response) {
-  const { fileName, totalChunks } = req.body;
-  const videoId = generateId();
+  const { fileName, totalChunks, videoId } = req.body;
 
-  const metadata = {
-    videoId,
-    fileName,
-    extension: path.extname(fileName),
-    totalChunks,
-    recievedChunks: [],
-  };
+  if (!fileName || !videoId || !totalChunks) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
 
-  // Create Separate Directory
-  await fs.promises.mkdir(path.join(tmpdir, videoId), { recursive: true });
+  const dir = path.join(tmpdir, videoId);
+  await fs.mkdir(dir, { recursive: true });
 
   const META_FILE_NAME = getMetaFilePath(videoId);
-  const FILE_CONTENT = JSON.stringify(metadata);
-  fs.writeFile(META_FILE_NAME, FILE_CONTENT, (err) => {
-    if (err) {
-      throw err;
-    }
-    res.json({
-      status: "Success",
-      videoId,
-    });
-  });
+  // include all fields you'll need later to avoid undefined (e.g., recievedChunks, extension)
+  await fs.writeFile(
+    META_FILE_NAME,
+    JSON.stringify({ fileName, totalChunks, recievedChunks: [], extension: path.extname(fileName) })
+  );
+
+  return res.status(201).json({ status: "Success", videoId });
 }
 
 async function uploadChunk(req: Request, res: Response) {
+  console.log("Chunk Recieved");
   const { videoId, chunkIndex } = req.params;
 
   // check if file with video id exists
@@ -49,12 +42,12 @@ async function uploadChunk(req: Request, res: Response) {
   }
 
   // Geting meta data file
-  const contentBuffer = await fs.promises.readFile(metaFilePath);
+  const contentBuffer = await fs.readFile(metaFilePath);
   const dataObject = JSON.parse(contentBuffer.toString());
 
   // Updating meta chunkIndex and write
   dataObject.recievedChunks.push(parseInt(chunkIndex));
-  await fs.promises.writeFile(metaFilePath, JSON.stringify(dataObject));
+  await fs.writeFile(metaFilePath, JSON.stringify(dataObject));
 
   // Sending back response
   res.json({
@@ -67,11 +60,12 @@ async function complete(req: Request, res: Response) {
   const { videoId } = req.params;
 
   const metaDataPath = getMetaFilePath(videoId);
+
   if (!(await checkPathExists(metaDataPath))) {
     throw new Error("Invalide Video id");
   }
 
-  const contentString = await fs.promises.readFile(metaDataPath, "utf-8");
+  const contentString = await fs.readFile(metaDataPath, "utf-8");
   const meta = JSON.parse(contentString);
 
   // If some chunks are missing send back the chunks number
@@ -86,11 +80,11 @@ async function complete(req: Request, res: Response) {
   }
 
   const completePath = path.join(queuedDir, `video-${videoId}${meta.extension}`);
-  const writeableStream = fs.createWriteStream(completePath);
+  const writeableStream = createWriteStream(completePath);
 
   for (let i = 0; i < meta.totalChunks; i++) {
     const chunkPath = path.join(tmpdir, videoId, `chunk_${videoId}_${i}`);
-    const readableStream = fs.createReadStream(chunkPath);
+    const readableStream = createReadStream(chunkPath);
     await new Promise((resolve, rejects) => {
       readableStream.pipe(writeableStream, { end: false });
       // @ts-ignore
@@ -98,10 +92,15 @@ async function complete(req: Request, res: Response) {
       readableStream.once("error", rejects);
     });
 
-    await fs.promises.rm(chunkPath);
+    await fs.rm(chunkPath);
   }
 
   writeableStream.end();
+
+  writeableStream.on("finish", () => {
+    console.log("All chunks written successfully");
+    fs.rmdir(path.join(tmpdir, videoId));
+  });
 
   // Virus Scan and Move to Storage Service
   await videoQueue.add("video-process", {

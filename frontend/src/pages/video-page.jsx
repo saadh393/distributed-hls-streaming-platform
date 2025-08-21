@@ -2,23 +2,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Maximize, Pause, Play, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router";
+import { useApp } from "../context/app-context";
 
 export default function VideoPlayer() {
   const navigate = useNavigate();
+  const { videos } = useApp();
 
-  const video = {
-    id: "1",
-    title: "Getting Started with React",
-    publisher: "Tech Academy",
-    publisherAvatar: "/placeholder.svg?height=32&width=32",
-    videoUrl: "/placeholder.svg?height=480&width=854",
-    description:
-      "Learn the fundamentals of React in this comprehensive tutorial. We'll cover components, props, state, and more.",
-    views: "12,543",
-    uploadDate: "2 days ago",
-  };
+  const video = videos.video;
 
-  if (!video) {
+  if (!video.length) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

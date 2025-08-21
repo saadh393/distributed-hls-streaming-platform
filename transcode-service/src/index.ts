@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 
 import { TRANSCODED_BUCKET } from "./config/app-config";
 import bucketInit from "./utils/bucket-init";

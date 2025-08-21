@@ -27,7 +27,7 @@ app.use(express.json());
 // Cookie Parser
 app.use(cookieParser());
 
-app.use(router);
+app.use("/api", router);
 
 // Not found middleware
 app.use(notfoundMiddleware);

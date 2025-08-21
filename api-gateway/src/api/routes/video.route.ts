@@ -8,6 +8,8 @@ const videoRoute = express.Router();
 
 videoRoute.get("/", videoController.getVideos);
 
+videoRoute.get("/init", authMiddleware, videoController.initVideoUpload);
+
 videoRoute.post("/", authMiddleware, validator(createVideoValidator), videoController.createVideo);
 
 export default videoRoute;

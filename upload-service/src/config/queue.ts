@@ -24,4 +24,4 @@ connection.on("error", (err) => {
 });
 
 export const videoQueue = new Queue("videoQueue", { connection });
-export const trandcodeQueue = new Queue("transcodeQueue", { connection });
+export const transcodeQueue = new Queue("transcodeQueue", { connection });

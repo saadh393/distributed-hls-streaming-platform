@@ -14,10 +14,17 @@ const storage = multer.diskStorage({
     const uploadId = req?.params?.videoId ?? generateId();
     const chunkIndex = req?.params?.chunkIndex ?? generateId();
     const fileExtenstion = path.extname(file.originalname);
-    cb(null, suffix + uploadId + "_" + chunkIndex + fileExtenstion);
+    const output = suffix + uploadId + "_" + chunkIndex + fileExtenstion;
+    console.log("Output", output);
+    cb(null, output);
   },
 });
 
-const multerMiddleware = multer({ storage: storage });
+const multerMiddleware = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB
+  },
+});
 
 export default multerMiddleware;

@@ -5,7 +5,8 @@ const LOCAL_ITEM_NAME = "video-streaming/user";
 export default function useMe() {
   const [data, setData] = useState(() => {
     const local = localStorage.getItem(LOCAL_ITEM_NAME);
-    return local ? JSON.parse(local) : null;
+    if (local === "undefined") return null
+    return local ? JSON.parse(local) ?? null : null;
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,7 +14,7 @@ export default function useMe() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch(import.meta.env.VITE_API_BASE_URL + "/auth/me", {
+    fetch("/api/auth/me", {
       credentials: "include",
     })
       .then((res) => res.json())

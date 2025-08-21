@@ -36,7 +36,7 @@ export function LoginForm({ className, ...props }) {
 
     try {
       const payload = { email, password };
-      const data = await postJson(import.meta.env.VITE_API_BASE_URL + "/auth/login", payload);
+      const data = await postJson("/auth/login", payload);
 
       setUserData(data);
       navigate("/");

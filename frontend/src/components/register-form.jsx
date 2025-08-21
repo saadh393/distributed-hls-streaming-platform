@@ -49,7 +49,7 @@ export default function RegisterForm({ className, ...props }) {
     };
 
     try {
-      const data = await postJson(import.meta.env.VITE_API_BASE_URL + "/auth/register", payload);
+      const data = await postJson("/auth/register", payload);
       reset(); // form clear
       setUserData(data);
       navigate("/");

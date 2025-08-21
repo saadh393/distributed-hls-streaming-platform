@@ -15,4 +15,5 @@ export default function errorMiddleware(error: ApiError, req: Request, res: Resp
     statusCode,
     message: error.message || "Internal Server Error",
   });
+  return;
 }

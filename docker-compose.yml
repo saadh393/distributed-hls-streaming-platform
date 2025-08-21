@@ -1,4 +1,16 @@
 services:
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev
+
   redis:
     image: redis/redis-stack:latest
     container_name: redis
@@ -17,6 +29,8 @@ services:
     command: npm run dev
     environment:
       - CHOKIDAR_USEPOLLING=true
+    env_file:
+      - ./api-gateway/.env
 
   upload-service:
     build: ./upload-service
@@ -35,6 +49,8 @@ services:
       - MINIO_PORT=9000
       - MINIO_ROOT_USER=ROOTUSER
       - MINIO_ROOT_PASSWORD=CHANGEME123
+      - UPLOAD_JWT_SECRET=supersecret123
+
     depends_on:
       - redis
       - minio-service
@@ -50,7 +66,7 @@ services:
       - MINIO_ROOT_PASSWORD=CHANGEME123
     command: server /data --console-address ":9001"
     volumes:
-      - ./min-io/drive:/data
+      - min_io:/data
 
   transcode-service:
     build: ./transcode-service
@@ -63,12 +79,8 @@ services:
     command: npm run dev
     environment:
       - CHOKIDAR_USEPOLLING=true
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - MINIO_HOST=minio
-      - MINIO_PORT=9000
-      - MINIO_ROOT_USER=ROOTUSER
-      - MINIO_ROOT_PASSWORD=CHANGEME123
+    env_file:
+      - ./transcode-service/.env
     depends_on:
       - redis
 
@@ -110,3 +122,4 @@ services:
 
 volumes:
   pg_data: {}
+  min_io: {}

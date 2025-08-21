@@ -5,4 +5,5 @@ export default function notfoundMiddleware(req: Request, res: Response, next: Ne
     success: false,
     message: `Route [${req.method}] ${req.originalUrl} not found.`,
   });
+  return;
 }

@@ -1,28 +1,24 @@
 import { NextFunction, Request, Response } from "express";
-import { createErrorMap, fromError } from "zod-validation-error/v4";
-import { z } from "zod/v4";
+import { ZodSchema } from "zod";
+import { zodErrorToFieldErrors } from "../../utils/zod-error-to-field-errors";
 
-z.config({
-  customError: createErrorMap({
-    includePath: true,
-  }),
-});
+export const validator =
+  <T>(schema: ZodSchema<T>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.body);
 
-export default function validateRequest(schema: z.Schema) {
-  return function (req: Request, res: Response, next: NextFunction): void {
-    console.log(req.body);
-    try {
-      schema.parse({
-        body: req.body,
-        params: req.params,
-        query: req.query,
+    if (!result.success) {
+      const { fieldErrors, details } = zodErrorToFieldErrors(result.error);
+
+      res.status(422).json({
+        message: "Invalid input",
+        code: "VALIDATION_ERROR",
+        fieldErrors,
+        details,
       });
-
-      next();
-    } catch (e: any) {
-      const validationError = fromError(e);
-      console.log(validationError.toString());
-      next(e);
+      return;
     }
+
+    // req.body = result;
+    return next();
   };
-}

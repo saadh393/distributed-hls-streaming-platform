@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Play } from "lucide-react";
+import { useApp } from "../context/app-context";
 
 const mockVideos = [
   {
@@ -54,11 +55,33 @@ const mockVideos = [
 ];
 
 export function VideosGrid() {
+  const { videos } = useApp();
+
+  if (!videos.video && videos.state == "loading") {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 m-8">
+        {Array.from({ length: 50 }).map((x, i) => {
+          return <div key={i} className="p-10 bg-zinc-700 rounded-md"></div>;
+        })}
+      </div>
+    );
+  }
+
+  if (!videos.video && videos.state != "loading") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold mb-4">No videos are published yet</h1>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-6 text-foreground">Your Videos</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {mockVideos.map((video) => (
+        {videos.video.map((video) => (
           <a key={video.id} href={`/video/${video.id}`}>
             <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
               <CardContent className="p-0">

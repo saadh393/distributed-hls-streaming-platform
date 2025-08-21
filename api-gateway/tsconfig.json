@@ -5,7 +5,8 @@
     "declaration": true,
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node", "express"]
+    "types": ["node", "express"],
+    "strict": false
   },
   "include": ["src/**/*", "./src/types/express.d.ts", "src"],
   "exclude": ["node_modules", "public"]
