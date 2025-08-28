@@ -1,11 +1,13 @@
-import dotenv from "dotenv";
-dotenv.config();
-
+import "dotenv/config";
 import app from "./app";
+import { PORT } from "./config/app-config";
+import validateEnv from "./utils/env-validator";
 
-const port = process.env.PORT || 3004;
+try {
+  validateEnv();
+} catch (err) {
+  console.error("Environment validation failed:", err);
+  process.exit(1);
+}
 
-app.listen(port, () => {
-  console.log(process.env.MINIO_HOST);
-  console.log("Streaming service is running at port - ", port);
-});
+app.listen(PORT, () => console.log("Streaming service is running at PORT - ", PORT));

@@ -94,13 +94,6 @@ services:
     command: npm run dev
     env_file:
       - ./streaming-service/.env
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - MINIO_HOST=minio
-      - MINIO_PORT=9000
-      - MINIO_ROOT_USER=ROOTUSER
-      - MINIO_ROOT_PASSWORD=CHANGEME123
     depends_on:
       - redis
 

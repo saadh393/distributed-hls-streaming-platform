@@ -1,14 +1,30 @@
 import { NextFunction, Request, Response } from "express";
+import ApiError from "../utils/api-error";
 
-interface errorType extends Error {}
+export default function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+  // Default values
+  let statusCode = 500;
+  let responseBody: Record<string, any> = {
+    error: {
+      type: "InternalServerError",
+      message: "Something went wrong",
+    },
+  };
 
-export default function errorHandler(error: errorType, req: Request, res: Response, next: NextFunction) {
-  let status_code: number = req.statusCode || 500;
-  const default_: string = "Internal Server Error";
-  let error_msg: string = error?.message || default_;
+  // If it's an ApiError, extract details
+  if (err instanceof ApiError) {
+    statusCode = err.statusCode || 500;
+    responseBody = {
+      error: {
+        type: "ApiError",
+        message: err.message,
+        statusCode: err.statusCode,
+      },
+    };
+  } else {
+    // For debugging (optional, in dev only)
+    console.error("Unhandled error:", err);
+  }
 
-  res.status(status_code).json({
-    status: "Error",
-    message: error_msg,
-  });
+  res.status(statusCode).json(responseBody);
 }

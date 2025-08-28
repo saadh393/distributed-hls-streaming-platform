@@ -5,12 +5,12 @@ import morgan from "morgan";
 import errorHandler from "./middleware/error-handling-middleware";
 import notfoundMiddleware from "./middleware/not-found-middleware";
 import router from "./router/index";
+import { corsOptions } from "./utils/cors-options";
 
 const app = express();
 
 // Cors protection
-// @todo: Only accept request from Api gateway
-app.use(cors());
+app.use(cors(corsOptions as cors.CorsOptions));
 
 // Use Helmet
 app.use(helmet());

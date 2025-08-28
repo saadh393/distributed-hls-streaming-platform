@@ -1,12 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import ApiError from "../utils/api-error";
 
 export default function requirePlayback(req: Request, res: Response, next: NextFunction) {
   const { videoId } = req.params;
   const token = req.query.token as string;
 
   if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
+    throw new ApiError("No token provided", 401);
   }
 
   try {
@@ -14,11 +15,11 @@ export default function requirePlayback(req: Request, res: Response, next: NextF
     console.log(decoded, videoId);
     // @ts-ignore
     if (decoded?.videoId !== videoId) {
-      return res.status(403).json({ message: "Forbidden" });
+      throw new ApiError("Forbidden", 403);
     }
     return next();
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Something went wrong" });
+    throw new ApiError("Something went wrong", 500);
   }
 }

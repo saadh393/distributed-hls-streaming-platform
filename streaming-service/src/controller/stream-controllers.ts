@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { M3U8_BUCKET } from "../config/app-config";
-import { getPlaylist } from "../config/storage-config";
+
 import storageService from "../services/storage-service";
 import loadAesKeyBytes from "../utils/load-aes-key";
 import rewriteMasterWithToken from "../utils/rewrite-master-with-token";
@@ -10,7 +10,7 @@ async function master_playlist(req: Request, res: Response) {
   const videoId = req.params.videoId;
   const token = req.query.token as string;
 
-  const { data, ContentType } = await getPlaylist(M3U8_BUCKET, videoId + "/master.m3u8");
+  const { data, ContentType } = await storageService.getPlaylist(M3U8_BUCKET, videoId + "/master.m3u8");
   const body = rewriteMasterWithToken(data, videoId, token);
 
   res.setHeader("Content-Type", ContentType as string);
@@ -24,7 +24,8 @@ async function resolution_playlist(req: Request, res: Response) {
   const resolution = req.params.resolution;
   const token = req.query.token as string;
 
-  const { data, ContentType } = await getPlaylist(M3U8_BUCKET, `${videoId}/${resolution}/index.m3u8`);
+  const KEY = `${videoId}/${resolution}/index.m3u8`; // 2ak1913/360p/index.m3u8
+  const { data, ContentType } = await storageService.getPlaylist(M3U8_BUCKET, KEY);
 
   const options = { rendition: resolution, token, videoId, aes128: true, injectKeyWhenMissing: false };
   const body = rewriteVariantWithToken(data, options);
