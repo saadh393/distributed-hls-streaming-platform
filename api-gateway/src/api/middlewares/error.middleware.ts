@@ -1,19 +1,11 @@
 import { NextFunction, Request, Response } from "express";
+import ApiError from "../../utils/ApiError";
 
-interface ApiError extends Error {
-  statusCode?: number;
-}
-
-export default function errorMiddleware(error: ApiError, req: Request, res: Response, next: NextFunction) {
-  const statusCode = error.statusCode || 500;
-  // Log the error (can be replaced with Winston or external logger)
-  console.error(`[ERROR] ${req.method} ${req.originalUrl}`);
-  console.error(error.stack || error.message);
-
-  res.status(statusCode).json({
-    status: error,
-    statusCode,
-    message: error.message || "Internal Server Error",
-  });
-  return;
+export function errorMiddleware(error: any, req: Request, res: Response, next: NextFunction) {
+  if (error instanceof ApiError) {
+    res.status(error.statusCode).json({ error: error.message });
+  } else {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 }

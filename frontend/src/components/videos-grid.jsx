@@ -7,7 +7,7 @@ import { useApp } from "../context/app-context";
 export function VideosGrid() {
   const { videos } = useApp();
 
-  if (!videos.video && videos.state == "loading") {
+  if (!videos.videos && videos.state == "loading") {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 m-8">
         {Array.from({ length: 50 }).map((x, i) => {
@@ -17,7 +17,7 @@ export function VideosGrid() {
     );
   }
 
-  if (!videos.video && videos.state != "loading") {
+  if (!videos.videos && videos.state != "loading") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -31,13 +31,14 @@ export function VideosGrid() {
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-6 text-foreground">Your Videos</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {videos.video.map((video) => (
+        {videos.videos.map((video) => (
           <a key={video.id} href={`/video/${video.id}`}>
             <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
               <CardContent className="p-0">
                 <div className="relative">
                   <img
-                    src={video.thumbnail || "/placeholder.svg"}
+                    // eslint-disable-next-line no-constant-binary-expression
+                    src={`/api/video/thumbnail/${video.id}` || "/placeholder.svg"}
                     alt={video.title}
                     className="w-full h-48 object-cover rounded-t-lg"
                   />
@@ -52,15 +53,15 @@ export function VideosGrid() {
                   <h3 className="font-medium text-card-foreground mb-2 line-clamp-2 leading-tight">{video.title}</h3>
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={video.publisherAvatar || "/placeholder.svg"} alt={video.publisher} />
+
                       <AvatarFallback className="text-xs">
-                        {video.publisher
+                        {video.uploader.name
                           .split(" ")
                           .map((n) => n[0])
                           .join("")}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm text-muted-foreground">{video.publisher}</span>
+                    <span className="text-sm text-muted-foreground">{video.uploader.name}</span>
                   </div>
                 </div>
               </CardContent>

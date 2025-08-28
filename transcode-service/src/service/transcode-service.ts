@@ -1,72 +1,123 @@
-const { spawn } = require("child_process");
-import fs from "fs";
-import path from "path";
+// src/transcode/transcodeVideo.ts
+import path from "node:path";
+import { DEFAULT_RENDITIONS } from "../config/default-renditions";
+import { TranscodeOptions } from "../types/transcode-types";
+import { makeDeterministicIvHex } from "../utils/crypto-utils";
+import { runFFmpeg } from "../utils/ffmpeg-utils";
+import { ensureDir, writeKeyFiles, writeMaster } from "../utils/fs-utils";
 
-const resolutions = [
-  // { name: "1080p", width: 1920, height: 1080, bandwidth: 5000000 },
-  // { name: "720p", width: 1280, height: 720, bandwidth: 2800000 },
-  // { name: "480p", width: 854, height: 480, bandwidth: 1400000 },
-  { name: "360p", width: 640, height: 360, bandwidth: 800000 },
-];
+/**
+ * Transcode into HLS TS for given renditions + optional AES-128 encryption.
+ * Output layout:
+ *   {outRoot}/{videoId}/master.m3u8
+ *   {outRoot}/{videoId}/{360p}/index.m3u8
+ *   {outRoot}/{videoId}/{360p}/seg_00001.ts
+ */
+export async function transcodeVideo(opts: TranscodeOptions): Promise<{ outDir: string }> {
+  const {
+    videoId,
+    inputPath,
+    outRootDir,
+    renditions = DEFAULT_RENDITIONS,
+    segmentSeconds = 4,
+    gopSeconds = 4,
+    preset = "veryfast",
+    crf = 23,
+    encrypt = false,
+    keyUrlBase = "",
+    keyStoreDir = path.join(outRootDir, "keys"),
+    ivHex = undefined,
+  } = opts;
+  console.log(opts);
 
-export default function transcodeVideo(inputPath: string, outputDir: string): Promise<string> {
-  const args: string[] = [];
-  resolutions.forEach((res, i) => {
-    args.push(
-      "-vf",
-      `scale=w=${res.width}:h=${res.height}`,
-      "-c:a",
-      "aac",
-      "-ar",
-      "48000",
+  const outDir = outRootDir;
+  ensureDir(outDir);
+
+  // Prepare AES key-info if encryption enabled
+  let keyInfoPath: string | undefined;
+  if (encrypt) {
+    const iv = ivHex ?? makeDeterministicIvHex(videoId);
+    if (!keyUrlBase) throw new Error("keyUrlBase is required when encrypt=true");
+    const files = writeKeyFiles(keyStoreDir, videoId, keyUrlBase, iv);
+    keyInfoPath = files.keyInfoPath;
+  }
+
+  // For each rendition, run a dedicated ffmpeg
+  for (const r of renditions) {
+    const rDir = path.join(outDir, r.name);
+    ensureDir(rDir);
+
+    const segmentPattern = path.join(rDir, "seg_%05d.ts"); // 00001.ts ...
+    const indexPath = path.join(rDir, "index.m3u8");
+
+    // GOP assumptions—if source is ~12 fps, gop=48=>4s
+    const gop = Math.max(1, Math.round((48 * gopSeconds) / 4)); // keeps 48 when gopSeconds=4
+
+    const args = [
+      "-y",
+      "-i",
+      inputPath,
+
+      // VIDEO
       "-c:v",
-      "h264",
+      "libx264",
       "-profile:v",
       "main",
+      "-pix_fmt",
+      "yuv420p",
+      "-preset",
+      preset,
       "-crf",
-      "20",
+      String(crf),
+      "-vf",
+      `scale=w=${r.width}:h=${r.height}:flags=lanczos`,
       "-sc_threshold",
       "0",
       "-g",
-      "48",
+      String(gop),
       "-keyint_min",
-      "48",
+      String(gop),
+
+      // AUDIO
+      "-c:a",
+      "aac",
+      "-b:a",
+      `${r.aBitrateKbps}k`,
+      "-ac",
+      "2",
+      "-ar",
+      "48000",
+
+      // Rate control (CBR-ish ladder; tune as needed)
+      "-b:v",
+      `${r.vBitrateKbps}k`,
+      "-maxrate",
+      `${r.vMaxrateKbps}k`,
+      "-bufsize",
+      `${r.vBufsizeKbps}k`,
+
+      // HLS
       "-hls_time",
-      "4",
+      String(segmentSeconds),
       "-hls_playlist_type",
       "vod",
-      "-b:v",
-      `${(res.width / 1000) * 2}k`,
-      "-maxrate",
-      `${(res.width / 1000) * 2.5}k`,
-      "-bufsize",
-      `${(res.width / 1000) * 3}k`,
+      "-hls_flags",
+      "independent_segments",
       "-hls_segment_filename",
-      `${outputDir}/${res.name}_%03d.ts`,
-      `${outputDir}/${res.name}.m3u8`
-    );
-  });
+      segmentPattern,
+    ];
 
-  return new Promise((resolve, reject) => {
-    const ffmpeg = spawn("ffmpeg", ["-i", inputPath, ...args]);
+    if (encrypt && keyInfoPath) {
+      args.push("-hls_key_info_file", keyInfoPath);
+    }
 
-    ffmpeg.stderr.on("data", (data: Buffer) => {
-      console.log(`FFmpeg: ${data.toString()}`);
-    });
+    args.push(indexPath);
 
-    ffmpeg.on("exit", (code: number) => {
-      if (code === 0) {
-        let masterContent = "#EXTM3U\n#EXT-X-VERSION:3\n\n";
-        resolutions.forEach((res) => {
-          masterContent += `#EXT-X-STREAM-INF:BANDWIDTH=${res.bandwidth},RESOLUTION=${res.width}x${res.height}\n`;
-          masterContent += `${res.name}.m3u8\n\n`;
-        });
+    await runFFmpeg(args);
+  }
 
-        fs.writeFileSync(path.join(outputDir, "master.m3u8"), masterContent);
-        resolve("Transcoding complete");
-      } else {
-        reject(new Error(`FFmpeg exited with code ${code}`));
-      }
-    });
-  });
+  // Write master.m3u8 (child URIs relative)
+  writeMaster(outDir, renditions);
+
+  return { outDir };
 }

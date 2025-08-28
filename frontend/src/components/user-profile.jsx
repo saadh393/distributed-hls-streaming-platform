@@ -13,7 +13,7 @@ export default function UserProfile() {
   const { user, clearData } = useApp();
 
   function logout() {
-    fetch(import.meta.env.VITE_API_BASE_URL + "/auth/logout", {
+    fetch("/api/auth/logout", {
       credentials: "include",
       method: "POST",
     })

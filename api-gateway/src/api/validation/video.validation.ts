@@ -5,3 +5,9 @@ export const createVideoValidator = zod.object({
   title: zod.string(),
   description: zod.string(),
 });
+
+export const updateVideoValidator = zod.object({
+  title: zod.string().optional(),
+  description: zod.string().optional(),
+  status: zod.string().optional(),
+});

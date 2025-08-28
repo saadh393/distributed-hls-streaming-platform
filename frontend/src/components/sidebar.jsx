@@ -57,7 +57,7 @@ export function Sidebar({ onTabChange }) {
             variant={activeTab === "/manage-videos" ? "default" : "ghost"}
             className={cn(
               "w-full justify-start gap-3",
-              activeTab === "/add-video"
+              activeTab === "/manage-videos"
                 ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
                 : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             )}

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { M3U8_BUCKET } from "../config/app-config";
-import { signedUrl } from "../config/storage-config";
+import { getPlaylist } from "../config/storage-config";
+import rewriteMasterWithToken from "../utils/rewrite-master-with-token";
 
 const resolutions = [
   // { name: "1080p", width: 1920, height: 1080, bandwidth: 5000000 },
@@ -11,21 +12,17 @@ const resolutions = [
 
 export async function streamService(req: Request, res: Response) {
   const videoId = req.params.videoId;
-  const playlistUrls = [];
+  const token = req.query.token as string;
 
-  for (const res of resolutions) {
-    const playlist = `${videoId}/${res.name}.m3u8`;
-    const url = await signedUrl(M3U8_BUCKET, playlist);
-    playlistUrls.push({
-      ...res,
-      url,
-    });
+  try {
+    const { data, ContentType } = await getPlaylist(M3U8_BUCKET, videoId + "/master.m3u8");
+    const body = rewriteMasterWithToken(data, videoId, token);
+
+    res.setHeader("Content-Type", ContentType as string);
+    res.setHeader("Cache-Control", "private, max-age=5, stale-while-revalidate=30");
+
+    return res.status(200).send(body);
+  } catch (err) {
+    throw err;
   }
-
-  const master = playlistUrls.map(
-    (playable) =>
-      `#EXT-X-STREAM-INF:BANDWIDTH=${playable.bandwidth},RESOLUTION=${playable.width}x${playable.height}\n${playable.url}`
-  );
-  res.set("Content-Type", "application/vnd.apple.mpegurl");
-  res.send(`#EXTM3U\n${master.join("\n")}`);
 }

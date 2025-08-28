@@ -15,7 +15,7 @@ export default function VideoForm({
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    isPublished: false
+    isPublished: null
   });
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function VideoForm({
       setFormData({
         title: video.title || "",
         description: video.description || "",
-        isPublished: video.isPublished || false
+        isPublished: video.isPublished
       });
     }
   }, [video]);
@@ -70,13 +70,13 @@ export default function VideoForm({
           <div className="flex items-center space-x-2">
             <Switch
               id="isPublished"
-              checked={formData.isPublished}
+              checked={formData.isPublished == "published"}
               onCheckedChange={(checked) =>
-                setFormData(prev => ({ ...prev, isPublished: checked }))
+                setFormData(prev => ({ ...prev, isPublished: checked ? "published" : "success" }))
               }
             />
             <Label htmlFor="isPublished">
-              {formData.isPublished ? "Published" : "Draft"}
+              {formData.isPublished == "published" ? "Published" : "Success"}
             </Label>
           </div>
         </div>

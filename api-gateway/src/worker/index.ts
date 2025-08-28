@@ -26,6 +26,7 @@ const metaSchema = z.object({
   duration: z.number(),
   thumbnail: z.string(),
   videoId: z.string(),
+  status: videoStatus,
 });
 
 async function workerCb(job: Job) {
@@ -57,13 +58,13 @@ async function updateMeta(job: Job) {
     throw new Error("Invalid job data");
   }
 
-  const { duration, thumbnail, videoId } = parse;
+  const { duration, thumbnail, videoId, status } = parse;
 
   const db = db_connection();
   await db.transaction(async (tx) => {
     await tx
       .update(video_table)
-      .set({ duration: formatDuration(duration), thumbnail })
+      .set({ duration: formatDuration(duration), thumbnail, status })
       .where(eq(video_table.id, videoId));
   });
 }

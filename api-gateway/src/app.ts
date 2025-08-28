@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import path from "path";
-import errorMiddleware from "./api/middlewares/error.middleware";
+import { errorMiddleware } from "./api/middlewares/error.middleware";
 import notfoundMiddleware from "./api/middlewares/notfound.middleware";
 import router from "./api/routes";
 import { corsOptions } from "./utils/cors-options";

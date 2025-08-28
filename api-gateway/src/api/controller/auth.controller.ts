@@ -51,6 +51,7 @@ async function registration(req: Request, res: Response) {
 
     if (result.length) {
       res.status(409).json({ message: "Email already in use" });
+      return;
     }
 
     const hashedPassword = await argon2.hash(password, {
@@ -77,9 +78,11 @@ async function registration(req: Request, res: Response) {
     // @ts-ignore
     delete created.password;
     res.status(201).json({ user: created });
+    return;
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Registration failed" });
+    return;
   }
 }
 

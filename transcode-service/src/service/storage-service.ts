@@ -7,6 +7,7 @@ import { Readable } from "stream";
 import { NUMBER_OF_CONCURRENT_UPLOADS, TRANSCODED_BUCKET } from "../config/app-config";
 import { downloadPath } from "../config/path-config";
 import storageConfig from "../config/storage-config";
+import collectFilesRecursively from "../utils/collect-files-utils";
 
 async function downloadFile(BUCKET: string, videoId: string, fileName: string): Promise<string> {
   // These will taken as param in future
@@ -39,35 +40,54 @@ async function downloadFile(BUCKET: string, videoId: string, fileName: string): 
   });
 }
 
-async function uploadTranscodedFiles(videoId: string, folderPath: string): Promise<void> {
-  const files = await fs.readdir(folderPath);
+function getContentType(filePath: string): string {
+  if (filePath.endsWith(".m3u8")) return "application/vnd.apple.mpegurl";
+  if (filePath.endsWith(".ts")) return "video/MP2T";
+  if (filePath.endsWith(".bin")) return "application/octet-stream";
+  return "application/octet-stream"; // fallback
+}
+
+async function uploadTranscodedFiles(videoId: string, rootPath: string): Promise<void> {
+  // Step 1: collect all files (including nested 360p/, 1080p/, keys/)
+  const files = await collectFilesRecursively(rootPath);
+
+  if (files.length === 0) {
+    console.warn(`No files found to upload for videoId=${videoId}`);
+    return;
+  }
+
+  // Step 2: setup concurrency control
   const limit = pLimit(NUMBER_OF_CONCURRENT_UPLOADS);
 
-  files.map((file) => {
-    const filePath = path.join(folderPath, file);
+  // Step 3: upload files
+  const uploadTasks = files.map((filePath) =>
+    limit(async () => {
+      const relativeKey = path.relative(rootPath, filePath).replace(/\\/g, "/"); // normalize for S3
+      const s3Key = `${videoId}/${relativeKey}`;
 
-    let contentType = "application/octet-stream";
-    if (file.endsWith(".m3u8")) contentType = "application/vnd.apple.mpegurl";
-    if (file.endsWith(".ts")) contentType = "video/MP2T";
+      const contentType = getContentType(filePath);
 
-    const uploadCommand = new PutObjectCommand({
-      Bucket: TRANSCODED_BUCKET,
-      Key: `${videoId}/${file}`,
-      Body: createReadStream(filePath),
-      ContentType: contentType,
-    });
+      const uploadCommand = new PutObjectCommand({
+        Bucket: TRANSCODED_BUCKET,
+        Key: s3Key,
+        Body: createReadStream(filePath),
+        ContentType: contentType,
+      });
 
-    return limit(() => {
       try {
-        storageConfig.send(uploadCommand);
+        await storageConfig.send(uploadCommand);
+        console.log(`✅ Uploaded: ${s3Key}`);
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error(`❌ Failed to upload ${s3Key}:`, error);
+        throw error; // Let Promise.all handle failure
       }
-    });
-  });
+    })
+  );
 
-  await Promise.all(files);
-  console.log("All files uploaded successfully to S3 bucket:", TRANSCODED_BUCKET);
+  // Step 4: wait for all uploads
+  await Promise.all(uploadTasks);
+
+  console.log(`🎉 All files uploaded successfully for videoId=${videoId} to bucket=${TRANSCODED_BUCKET}`);
 }
 
 async function uploadThumbnail(videoId: string, path: string) {

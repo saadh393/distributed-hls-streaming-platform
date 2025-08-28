@@ -54,7 +54,7 @@ export function AddVideo() {
             <CardTitle>Video File</CardTitle>
           </CardHeader>
           <CardContent>
-            <FileHandler videoId={videoId} setVideoId={setVideoId} />
+            <FileHandler videoId={videoId} setVideoId={setVideoId} setTitle={setTitle}/>
           </CardContent>
         </Card>
 

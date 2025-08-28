@@ -105,14 +105,14 @@ services:
       - redis
 
   postgresql:
-    image: postgres:15
+    image: postgres:13.22-alpine3.22
     container_name: postgres
     ports:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: example
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_database:/var/lib/postgresql/data
 
   adminer:
     image: adminer
@@ -121,5 +121,5 @@ services:
       - 8080:8080
 
 volumes:
-  pg_data: {}
+  pg_database: {}
   min_io: {}

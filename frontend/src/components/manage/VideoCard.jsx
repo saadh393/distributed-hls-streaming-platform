@@ -20,14 +20,12 @@ export default function VideoCard({ video, onEditClick }) {
       <div className="p-4">
         <div className="flex justify-between items-start">
           <div className="flex-1">
-            <h3 className={`font-medium line-clamp-2 ${
-              video.title ? 'text-gray-900' : 'text-gray-400 italic'
-            }`}>
+            <h3 className={`font-medium line-clamp-2 ${video.title ? 'text-gray-100' : 'text-gray-400 italic'
+              }`}>
               {video.title || 'Untitled'}
             </h3>
-            <p className={`text-sm mt-1 line-clamp-2 ${
-              video.description ? 'text-gray-500' : 'text-gray-400 italic text-xs'
-            }`}>
+            <p className={`text-sm mt-1 line-clamp-2 ${video.description ? 'text-gray-300' : 'text-gray-400 italic text-xs'
+              }`}>
               {video.description || 'No description'}
             </p>
             <div className="mt-2 flex items-center space-x-2">

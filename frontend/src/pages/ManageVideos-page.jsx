@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { getJson, postJson } from "../lib/api";
 import { Loader2 } from "lucide-react";
-import VideoList from "../components/manage/VideoList";
+import { useEffect, useState } from "react";
 import VideoForm from "../components/manage/VideoForm";
+import VideoList from "../components/manage/VideoList";
+import { getJson, patchJson, postJson } from "../lib/api";
 
 export default function ManageVideosPage() {
   const [videos, setVideos] = useState([]);
@@ -18,7 +18,7 @@ export default function ManageVideosPage() {
   const fetchVideos = async () => {
     try {
       setLoading(true);
-      const data = await getJson("/video", { credentials: 'include' });
+      const data = await getJson("/video", { credentials: "include" });
       setVideos(data);
     } catch (err) {
       console.error("Failed to fetch videos:", err);
@@ -41,11 +41,15 @@ export default function ManageVideosPage() {
 
     try {
       setSaving(true);
-      await postJson(`/video/${editingVideo.id}`, {
-        title: formData.title,
-        description: formData.description,
-        isPublished: formData.isPublished
-      }, { credentials: 'include' });
+      await patchJson(
+        `/video/${editingVideo.id}`,
+        {
+          title: formData.title,
+          description: formData.description,
+          status: formData.isPublished ? "published" : "success",
+        },
+        { credentials: "include" }
+      );
 
       await fetchVideos();
       setEditingVideo(null);
@@ -82,18 +86,10 @@ export default function ManageVideosPage() {
       {editingVideo ? (
         <div className=" rounded-lg shadow-sm p-6">
           <h2 className="text-lg font-medium mb-6">Edit Video</h2>
-          <VideoForm
-            video={editingVideo}
-            onSave={handleSave}
-            onCancel={handleCancelEdit}
-            isSaving={saving}
-          />
+          <VideoForm video={editingVideo} onSave={handleSave} onCancel={handleCancelEdit} isSaving={saving} />
         </div>
       ) : (
-        <VideoList
-          videos={videos}
-          onEditClick={handleEditClick}
-        />
+        <VideoList videos={videos} onEditClick={handleEditClick} />
       )}
     </div>
   );

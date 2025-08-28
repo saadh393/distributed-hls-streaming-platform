@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 const CHUNK_SIZE = 1024 * 1024; // 1MB
 
-export default function FileHandler({ videoId, setVideoId }) {
+export default function FileHandler({ videoId, setVideoId, setTitle }) {
   const [dragActive, setDragActive] = useState(false);
   const [uploadProgress, setUpload] = useState(0)
   const [error, setError] = useState(null)
@@ -58,6 +58,7 @@ export default function FileHandler({ videoId, setVideoId }) {
     try {
       const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
       const fileName = file.name
+      setTitle(fileName)
 
       // Steps
       // Step 1 : Request for Signed link and token 

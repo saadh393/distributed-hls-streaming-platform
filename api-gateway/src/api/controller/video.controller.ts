@@ -98,6 +98,67 @@ async function getThumbnail(req: Request, res: Response) {
   }
 }
 
-const videoController = { getVideos, createVideo, initVideoUpload, getThumbnail };
+// Update video details (title, description, status)
+async function updateVideo(req: Request, res: Response): Promise<void> {
+  try {
+    const videoId = req.params.id;
+    const { title, description, status } = req.body;
+    // @ts-ignore
+    const userId = req.user.id;
+    // Only allow update if uploader matches
+    const [video] = await db.select().from(video_table).where(eq(video_table.id, videoId));
+    if (!video) {
+      res.status(404).json({ message: "Video not found" });
+      return;
+    }
+    if (video.uploader !== userId) {
+      res.status(403).json({ message: "Unauthorized" });
+      return;
+    }
+    const updateData: any = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (status !== undefined) updateData.status = status;
+    const [updated] = await db.update(video_table).set(updateData).where(eq(video_table.id, videoId)).returning();
+    res.json({ message: "Video updated", data: updated });
+    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to update video" });
+  }
+}
+
+// Delete video
+async function deleteVideo(req: Request, res: Response): Promise<void> {
+  try {
+    const videoId = req.params.id;
+    // @ts-ignore
+    const userId = req.user.id;
+    const [video] = await db.select().from(video_table).where(eq(video_table.id, videoId));
+    if (!video) {
+      res.status(404).json({ message: "Video not found" });
+      return;
+    }
+    if (video.uploader !== userId) {
+      res.status(403).json({ message: "Unauthorized" });
+      return;
+    }
+    await db.delete(video_table).where(eq(video_table.id, videoId));
+    res.json({ message: "Video deleted" });
+    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to delete video" });
+  }
+}
+
+const videoController = {
+  getVideos,
+  createVideo,
+  initVideoUpload,
+  getThumbnail,
+  updateVideo,
+  deleteVideo,
+};
 
 export default videoController;

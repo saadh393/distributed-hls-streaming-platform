@@ -1,0 +1,3 @@
+http://streaming-service:3004/stream/hls/yoI5d46avQ/key
+/app/transcoded/yoI5d46avQ/keys/key.bin
+10295295dc2dbea809ef06cf918475c5

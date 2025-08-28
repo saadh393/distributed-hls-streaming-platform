@@ -19,7 +19,7 @@ function App() {
               <Route path="/add-video" element={<AddVideoPage />} />
               <Route path="/manage-videos" element={<ManageVideosPage />} />
             </Route>
-            <Route path="/video/:slug" element={<VideoPlayer />} />
+            <Route path="/video/:videoId" element={<VideoPlayer />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Routes>
