@@ -1,3 +1,0 @@
-http://streaming-service:3004/stream/hls/Vxt4e474MM/key
-/app/transcoded/Vxt4e474MM/keys/key.bin
-30ce6adf0f2a7ab63700d9ead40d6674

@@ -1,22 +1,17 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import dotenv from "dotenv";
+import "dotenv/config";
 import express from "express";
 import path from "path";
 import { errorMiddleware } from "./api/middlewares/error.middleware";
 import notfoundMiddleware from "./api/middlewares/notfound.middleware";
 import router from "./api/routes";
 import { corsOptions } from "./utils/cors-options";
-dotenv.config();
 
 const app = express();
 
 // Cors
-// @ts-ignore
-app.use(cors(corsOptions));
-
-// @ts-ignore
-// app.options("*", cors());
+app.use(cors(corsOptions as cors.CorsOptions));
 
 // Public Directory
 app.use(express.static(path.join(__dirname, "public")));

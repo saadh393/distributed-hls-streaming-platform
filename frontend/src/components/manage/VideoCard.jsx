@@ -1,8 +1,8 @@
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import { Clock, Pencil } from "lucide-react";
+import { Clock, Pencil, Trash2 } from "lucide-react";
 
-export default function VideoCard({ video, onEditClick }) {
+export default function VideoCard({ video, onEditClick, onDeleteClick }) {
   return (
     <Card className="overflow-hidden">
       <div className="relative aspect-video bg-gray-100">
@@ -43,15 +43,25 @@ export default function VideoCard({ video, onEditClick }) {
               </span>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-4"
-            onClick={() => onEditClick(video)}
-          >
-            <Pencil className="w-4 h-4 mr-1" />
-            Edit
-          </Button>
+          <div className="flex space-x-2 ml-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEditClick(video)}
+            >
+              <Pencil className="w-4 h-4 mr-1" />
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDeleteClick(video)}
+              className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete
+            </Button>
+          </div>
         </div>
       </div>
     </Card>

@@ -1,6 +1,6 @@
 import VideoCard from "./VideoCard";
 
-export default function VideoList({ videos, onEditClick }) {
+export default function VideoList({ videos, onEditClick, onDeleteClick }) {
   if (videos.length === 0) {
     return (
       <div className="text-center py-12">
@@ -15,7 +15,8 @@ export default function VideoList({ videos, onEditClick }) {
         <VideoCard 
           key={video.id} 
           video={video} 
-          onEditClick={onEditClick} 
+          onEditClick={onEditClick}
+          onDeleteClick={onDeleteClick}
         />
       ))}
     </div>

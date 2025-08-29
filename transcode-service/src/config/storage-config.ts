@@ -1,14 +1,14 @@
 import { S3Client } from "@aws-sdk/client-s3";
 
-const endPoint = `http://${process.env.MINIO_HOST}:${process.env.MINIO_PORT || 9000}`;
+const endPoint = `${process.env.STORAGE_HOST}:${process.env.STORAGE_PORT}`;
 
 const storageConfig = new S3Client({
   endpoint: endPoint,
   forcePathStyle: true,
-  region: "us-east-1",
+  region: process.env.STORAGE_REGION as string,
   credentials: {
-    accessKeyId: process.env.MINIO_ROOT_USER || "ROOTUSER",
-    secretAccessKey: process.env.MINIO_ROOT_PASSWORD || "CHANGEME123",
+    accessKeyId: process.env.STORAGE_ROOT_USER as string,
+    secretAccessKey: process.env.STORAGE_ROOT_PASSWORD as string,
   },
 });
 

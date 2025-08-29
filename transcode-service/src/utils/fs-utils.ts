@@ -2,11 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { Rendition } from "../types/transcode-types";
 import { genAesKeyBytes } from "./crypto-utils";
-import logger from "./logger";
 
 export function ensureDir(p: string) {
-  logger.info("ensureDir : " + p);
   fs.mkdirSync(p, { recursive: true });
+  return p;
 }
 
 export function writeMaster(outDir: string, renditions: Rendition[]) {

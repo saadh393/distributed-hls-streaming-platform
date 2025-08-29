@@ -61,6 +61,26 @@ export async function patchJson(url, body, { signal, credentials = 'include' } =
   return data;
 }
 
+export async function deleteJson(url, { signal, credentials = 'include' } = {}) {
+  const res = await fetch("/api" + url, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    credentials,
+    signal,
+  });
+
+  let data = null;
+  try { data = await res.json(); } catch (_) { }
+
+  if (!res.ok) {
+    const err = new Error(data?.message || `Request failed (${res.status})`);
+    err.status = res.status;
+    err.code = data?.code;
+    err.fieldErrors = data?.fieldErrors;
+    throw err;
+  }
+  return data;
+}
 
 export async function getVideoById(videoId) {
   const res = await fetch(`/api/feed/${videoId}`, {

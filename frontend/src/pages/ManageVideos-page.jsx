@@ -2,7 +2,7 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import VideoForm from "../components/manage/VideoForm";
 import VideoList from "../components/manage/VideoList";
-import { getJson, patchJson, postJson } from "../lib/api";
+import { getJson, patchJson, postJson, deleteJson } from "../lib/api";
 
 export default function ManageVideosPage() {
   const [videos, setVideos] = useState([]);
@@ -10,6 +10,8 @@ export default function ManageVideosPage() {
   const [error, setError] = useState(null);
   const [editingVideo, setEditingVideo] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deletingVideo, setDeletingVideo] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchVideos();
@@ -61,6 +63,33 @@ export default function ManageVideosPage() {
     }
   };
 
+  const handleDeleteClick = (video) => {
+    setDeletingVideo(video);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingVideo) return;
+
+    try {
+      setSaving(true);
+      await deleteJson(`/video/${deletingVideo.id}`, { credentials: "include" });
+      await fetchVideos();
+      setShowDeleteConfirm(false);
+      setDeletingVideo(null);
+    } catch (err) {
+      console.error("Failed to delete video:", err);
+      setError(err.message || "Failed to delete video");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
+    setDeletingVideo(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -89,7 +118,35 @@ export default function ManageVideosPage() {
           <VideoForm video={editingVideo} onSave={handleSave} onCancel={handleCancelEdit} isSaving={saving} />
         </div>
       ) : (
-        <VideoList videos={videos} onEditClick={handleEditClick} />
+        <VideoList videos={videos} onEditClick={handleEditClick} onDeleteClick={handleDeleteClick} />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-zinc-900 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">Delete Video</h3>
+            <p className="text-zinc-400 mb-6">
+              Are you sure you want to delete "{deletingVideo?.title || 'Untitled'}"? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleDeleteCancel}
+                disabled={saving}
+                className="px-4 py-2 text-zinc-300 border border-zinc-300 rounded-md hover:bg-zinc-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={saving}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

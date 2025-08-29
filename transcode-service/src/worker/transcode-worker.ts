@@ -1,4 +1,4 @@
-import { Job, Worker } from "bullmq";
+import { Worker } from "bullmq";
 import fs from "fs/promises";
 import path from "path";
 import { UPLOADS_BUCKET } from "../config/app-config";
@@ -10,43 +10,38 @@ import getDurationInSecond from "../service/duration-service";
 import { downloadFile, uploadThumbnail, uploadTranscodedFiles } from "../service/storage-service";
 import { makeHeroThumbnail } from "../service/thumbnail-service";
 import { transcodeVideo } from "../service/transcode-service";
+import { TranscodeJob, TranscodeJobData } from "../types/meta-types";
+import { ensureDir } from "../utils/fs-utils";
 import logger from "../utils/logger";
-
-interface TranscodeJobMeta {
-  videoId: string;
-  fileName: string;
-  extension: string;
-  totalChunks: number;
-  recievedChunks: number;
-}
-
-interface TranscodeJobData {
-  meta: TranscodeJobMeta;
-}
-
-type TranscodeJob = Job<TranscodeJobData>;
 
 const transcodeWorker = new Worker<TranscodeJobData>(
   "transcodeQueue",
   async (job: TranscodeJob) => {
     const { meta } = job.data;
     const { videoId, fileName } = meta;
-    const outputDir = path.join(transcodePath, videoId);
+
+    if (!videoId) {
+      throw new Error("videoId is missing in job data");
+    }
+
+    if (!fileName) {
+      throw new Error("fileName is missing in job data");
+    }
+
+    const outputDir = ensureDir(path.join(transcodePath, videoId));
     let downloadedFilePath = "";
 
     logger.info(`Starting transcoding for videoId: ${videoId}, fileName: ${fileName}`);
     await video_status_queue.add("db-update", { videoId, status: "processing" });
 
     try {
-      // Create output directory for transcoded files
-      await fs.mkdir(outputDir, { recursive: true });
-
       // Download the file from minio
       downloadedFilePath = await downloadFile(UPLOADS_BUCKET, videoId, fileName);
 
       // Extract video duration and Make thumbnail
       const time = await getDurationInSecond(downloadedFilePath);
       const outputFileName = path.join(downloadPath, `${videoId}.webp`);
+
       await makeHeroThumbnail(downloadedFilePath, outputFileName, time);
       await uploadThumbnail(videoId, outputFileName);
 
@@ -79,16 +74,14 @@ const transcodeWorker = new Worker<TranscodeJobData>(
     } finally {
       // Clean up the output directory
       await fs.rm(outputDir, { recursive: true, force: true });
-      await fs.rm(downloadedFilePath);
+      await fs.rm(downloadedFilePath, { recursive: true, force: true });
     }
   },
   { connection }
 );
 
-transcodeWorker.on("error", async (reason) => {
-  logger.error(reason);
-});
-transcodeWorker.on("failed", (job, err) => logger.error(`Transcoding job failed: ${job.id} ${err}`));
+transcodeWorker.on("error", async (reason) => logger.error(reason));
+transcodeWorker.on("failed", (job, err) => logger.error(`Transcoding failed: ${job.id} ${err}`));
 transcodeWorker.on("active", (job) => logger.info(`Transcoding job active: ${job.id}`));
 
 export default transcodeWorker;

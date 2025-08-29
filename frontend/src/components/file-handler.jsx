@@ -13,6 +13,24 @@ export default function FileHandler({ videoId, setVideoId, setTitle }) {
   const [uploadProgress, setUpload] = useState(0)
   const [error, setError] = useState(null)
   const [selectedFile, setSelectedFile] = useState(null)
+  const [retryCount, setRetryCount] = useState(0);
+  
+
+  const handleError = async (e) => {
+
+    try{
+      console.log("Retrying...", e) 
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Append timestamp or retry param to bypass cache
+      e.target.src = `/api/video/thumbnail/${videoId}?retry=${Date.now()}`;
+
+    } catch (error) {
+      console.error("Error fetching thumbnail:", error);
+      handleError(e)
+    }
+
+    
+  };
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -52,7 +70,6 @@ export default function FileHandler({ videoId, setVideoId, setTitle }) {
   const removeFile = () => {
     setSelectedFile(null);
   };
-
 
   async function handleFileUpload(file) {
     try {
@@ -106,7 +123,12 @@ export default function FileHandler({ videoId, setVideoId, setTitle }) {
       </CardHeader>
       <CardContent>
         <div className="bg-zinc-800 w-full aspect-video h-auto grid place-items-center rounded-md">
-          <Play className="h-12 w-12 text-muted-foreground" />
+        <img
+              src={`/api/video/thumbnail/${videoId}`}
+              alt="video thumbnail"
+              className="w-full h-full object-cover rounded-md"
+              onError={handleError}
+            />
         </div>
         <div className="flex-1 mt-4">
           <p className="font-medium">{selectedFile.name}</p>
@@ -115,7 +137,6 @@ export default function FileHandler({ videoId, setVideoId, setTitle }) {
       </CardContent>
     </Card>
   }
-
 
   return <>
     <Error>{error}</Error>

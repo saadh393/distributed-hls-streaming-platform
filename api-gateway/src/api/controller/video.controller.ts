@@ -2,11 +2,13 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { eq } from "drizzle-orm";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { TRANSCODE_BUCKET } from "../../config/contrains";
 import { db_connection } from "../../config/db-config";
 import storageConfig from "../../config/storage-config";
 import { video_table } from "../../model/video.model";
 import { UserType } from "../../types/express";
 import generateId from "../../utils/generate-id";
+import storageService from "../services/storage-service";
 
 const db = db_connection();
 
@@ -144,6 +146,10 @@ async function deleteVideo(req: Request, res: Response): Promise<void> {
       return;
     }
     await db.delete(video_table).where(eq(video_table.id, videoId));
+
+    // Delete from minio
+    await storageService.deleteFolder(TRANSCODE_BUCKET, videoId);
+
     res.json({ message: "Video deleted" });
     return;
   } catch (error) {

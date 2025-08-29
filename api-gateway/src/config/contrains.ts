@@ -1,3 +1,5 @@
+export const PORT = process.env.PORT || 3000;
+
 export const VIDEO_STATUS = {
   UPLOADING: "uploading",
   PROCESSING: "processing",
@@ -7,3 +9,5 @@ export const VIDEO_STATUS = {
   CORRUPTED: "corrupted",
   ERROR: "error",
 };
+
+export const TRANSCODE_BUCKET = process.env.TRANSCODE_BUCKET;
